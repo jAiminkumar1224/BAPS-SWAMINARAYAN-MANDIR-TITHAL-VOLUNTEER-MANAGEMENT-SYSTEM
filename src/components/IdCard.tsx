@@ -32,18 +32,18 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
     const baseUrl =
       appUrl ||
       import.meta.env.VITE_APP_URL ||
-      (typeof window !== 'undefined' ? window.location.origin : 'https://baps-tithal.netlify.app');
+      (typeof window !== 'undefined' ? window.location.origin : 'https://baps-tithal-svayamsevakdal.netlify.app');
 
     const cleanVolunteerId = (volunteerId || 'BAPS-74930-TNL').trim();
     const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify/${cleanVolunteerId}`;
 
-    // Auto font size for Seva Vibhag inside the White Text Box
+    // Auto font size for Seva Vibhag inside the White Text Box (with safe clearance for upper matras)
     const getVibhagFontSize = (text: string) => {
       const len = text ? text.length : 0;
-      if (len > 24) return 'text-[12px] sm:text-[14px]';
-      if (len > 18) return 'text-[14px] sm:text-[16px]';
-      if (len > 12) return 'text-[16px] sm:text-[19px]';
-      return 'text-[19px] sm:text-[22px]';
+      if (len > 24) return 'text-[11.5px] sm:text-[13px]';
+      if (len > 18) return 'text-[13px] sm:text-[15px]';
+      if (len > 12) return 'text-[15px] sm:text-[17px]';
+      return 'text-[17px] sm:text-[19.5px]';
     };
 
     // Auto font size for Volunteer Name
@@ -79,7 +79,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         />
 
         {/* 1. CENTERED CIRCULAR VOLUNTEER PHOTO */}
-        {/* Exact mathematical geometric center of inner circular frame: X: 50.0%, Y: 52.37%, Width: 21.8%, Height: 16.0% */}
+        {/* Exact concentric geometric center: X: 50.0%, Y: 52.37%, Width: 21.8%, Height: 16.0% */}
         <div
           className="absolute z-10 flex items-center justify-center pointer-events-none"
           style={{
@@ -113,20 +113,20 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </div>
         </div>
 
-        {/* 2. DYNAMIC SEVA VIBHAG IN WHITE TEXT BOX (EXACT CENTER FROM ALL SIDES [LTRB]) */}
-        {/* Center: X: 50.0%, Y: 64.50%, Width: 90.3%, Height: 5.96% */}
+        {/* 2. DYNAMIC SEVA VIBHAG IN WHITE TEXT BOX */}
+        {/* Optical center: X: 50.0%, Y: 65.30%, Width: 88.0%, Height: 6.5%, overflow-visible prevents any vowel clipping */}
         <div
-          className="absolute z-10 flex items-center justify-center text-center pointer-events-none"
+          className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '64.50%',
+            top: '65.30%',
             left: '50.0%',
-            width: '90.3%',
-            height: '5.96%',
+            width: '88.0%',
+            height: '6.5%',
             transform: 'translate(-50%, -50%)',
           }}
         >
           <span
-            className={`font-black tracking-wide text-[#0C3260] text-center leading-none truncate ${getVibhagFontSize(
+            className={`font-black tracking-wide text-[#0C3260] text-center leading-[1.15] whitespace-nowrap overflow-visible ${getVibhagFontSize(
               sevaVibhagName || 'સ્વયંસેવક દળ'
             )}`}
             style={{
@@ -137,16 +137,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </span>
         </div>
 
-        {/* 3. DYNAMIC VOLUNTEER DETAILS - EXACT SAME BASELINE AND FONT AS LABELS */}
-        {/* All values use the exact same 'Noto Sans Gujarati', pure white, bold font */}
+        {/* 3. DYNAMIC VOLUNTEER DETAILS - EXACT BASELINE AND FONT AS LABELS */}
+        {/* All values are aligned directly to the pre-printed title baselines and colon dots */}
 
-        {/* Line 1: ID (center y = 71.39%) */}
+        {/* Line 1: ID (baseline alignment: top = 72.10%) */}
         <div
           className="absolute z-10 flex items-center"
           style={{
-            top: '71.39%',
+            top: '72.10%',
             left: '19.5%',
-            width: '54.0%',
+            width: '52.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -158,13 +158,13 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </span>
         </div>
 
-        {/* Line 2: Name (center y = 74.41%) */}
+        {/* Line 2: Name (baseline alignment: top = 75.20%) */}
         <div
           className="absolute z-10 flex items-center"
           style={{
-            top: '74.41%',
+            top: '75.20%',
             left: '19.5%',
-            width: '54.0%',
+            width: '52.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -179,13 +179,13 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </span>
         </div>
 
-        {/* Line 3: Mobile (center y = 77.59%) */}
+        {/* Line 3: Mobile (baseline alignment: top = 78.30%) */}
         <div
           className="absolute z-10 flex items-center"
           style={{
-            top: '77.59%',
+            top: '78.30%',
             left: '19.5%',
-            width: '54.0%',
+            width: '52.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -197,13 +197,13 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </span>
         </div>
 
-        {/* Line 4: Village (center y = 80.62%) */}
+        {/* Line 4: Village (baseline alignment: top = 81.30%) */}
         <div
           className="absolute z-10 flex items-center"
           style={{
-            top: '80.62%',
+            top: '81.30%',
             left: '19.5%',
-            width: '54.0%',
+            width: '52.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -215,13 +215,13 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </span>
         </div>
 
-        {/* Line 5: Kshetra (center y = 83.79%) */}
+        {/* Line 5: Kshetra (baseline alignment: top = 84.50%) */}
         <div
           className="absolute z-10 flex items-center"
           style={{
-            top: '83.79%',
+            top: '84.50%',
             left: '19.5%',
-            width: '54.0%',
+            width: '52.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -233,15 +233,15 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </span>
         </div>
 
-        {/* 4. DYNAMIC QR CODE CONTAINER */}
-        {/* Center: X: 85.58%, Y: 77.59%, Width: 18.0%, Height: 14.55% */}
+        {/* 4. DYNAMIC QR CODE CONTAINER (MOVED ~2.6mm LEFT SO IT DOES NOT TOUCH RIGHT BORDER) */}
+        {/* Center: X: 82.0%, Y: 78.0%, Width: 16.5%, Height: 13.5% */}
         <div
           className="absolute z-10 flex items-center justify-center p-1 bg-white rounded-lg shadow-sm"
           style={{
-            top: '77.59%',
-            left: '85.58%',
-            width: '18.0%',
-            height: '14.55%',
+            top: '78.0%',
+            left: '82.0%',
+            width: '16.5%',
+            height: '13.5%',
             transform: 'translate(-50%, -50%)',
           }}
         >

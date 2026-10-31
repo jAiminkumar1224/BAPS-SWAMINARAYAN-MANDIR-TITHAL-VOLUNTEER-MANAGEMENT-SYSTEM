@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { SevaVibhag } from '../types';
 import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
+import { useAuth } from '../context/AuthContext';
 import {
   Layers,
   Plus,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 export const SevaVibhagManagement: React.FC = () => {
+  const { isSuperAdmin } = useAuth();
   const [departments, setDepartments] = useState<SevaVibhag[]>([]);
   const [volunteerCounts, setVolunteerCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -162,6 +164,11 @@ export const SevaVibhagManagement: React.FC = () => {
   };
 
   const handleDelete = async () => {
+    if (!isSuperAdmin) {
+      alert('સેવા વિભાગ ડિલીટ કરવાનો અધિકાર ફક્ત સુપર એડમિન પાસે છે.');
+      setDeletingDept(null);
+      return;
+    }
     if (!deletingDept) return;
 
     // Guard: check if volunteers exist
@@ -313,18 +320,20 @@ export const SevaVibhagManagement: React.FC = () => {
                         <Edit className="w-4 h-4" />
                       </button>
 
-                      <button
-                        onClick={() => setDeletingDept(dept)}
-                        title="ડિલીટ કરો (Delete)"
-                        disabled={assignedCount > 0}
-                        className={`p-1.5 rounded-lg transition ${
-                          assignedCount > 0
-                            ? 'text-slate-300 cursor-not-allowed'
-                            : 'text-rose-700 hover:bg-rose-100'
-                        }`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {isSuperAdmin && (
+                        <button
+                          onClick={() => setDeletingDept(dept)}
+                          title="ડિલીટ કરો (Delete)"
+                          disabled={assignedCount > 0}
+                          className={`p-1.5 rounded-lg transition ${
+                            assignedCount > 0
+                              ? 'text-slate-300 cursor-not-allowed'
+                              : 'text-rose-700 hover:bg-rose-100'
+                          }`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

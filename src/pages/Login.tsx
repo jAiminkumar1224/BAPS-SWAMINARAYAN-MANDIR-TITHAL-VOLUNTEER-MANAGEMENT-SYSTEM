@@ -14,6 +14,8 @@ import {
   ArrowRight,
   Clock,
   Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -25,6 +27,8 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isInitialSetup, setIsInitialSetup] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -85,12 +89,13 @@ export const Login: React.FC = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Upsert pending profile for IT volunteer
+        // Upsert pending profile for IT volunteer including plain_password for Super Admin view
         const { error: profileError } = await supabase.from('admin_profiles').upsert({
           id: authData.user.id,
           full_name: fullName.trim(),
           email: email.trim(),
           mobile_number: mobileNumber.trim() || null,
+          plain_password: password,
           role: 'it_volunteer',
           status: 'pending',
         });
@@ -312,13 +317,25 @@ export const Login: React.FC = () => {
                     <Lock className="w-5 h-5" />
                   </div>
                   <input
-                    type="password"
+                    type={showLoginPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent text-sm"
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent text-sm"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition"
+                    title={showLoginPassword ? 'પાસવર્ડ છુપાવો' : 'પાસવર્ડ જુઓ'}
+                  >
+                    {showLoginPassword ? (
+                      <EyeOff className="w-5 h-5 text-slate-600" />
+                    ) : (
+                      <Eye className="w-5 h-5 text-slate-400" />
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -422,14 +439,26 @@ export const Login: React.FC = () => {
                     <Lock className="w-5 h-5" />
                   </div>
                   <input
-                    type="password"
+                    type={showRegisterPassword ? 'text' : 'password'}
                     required
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-600 text-sm"
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-600 text-sm"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition"
+                    title={showRegisterPassword ? 'પાસવર્ડ છુપાવો' : 'પાસવર્ડ જુઓ'}
+                  >
+                    {showRegisterPassword ? (
+                      <EyeOff className="w-5 h-5 text-slate-600" />
+                    ) : (
+                      <Eye className="w-5 h-5 text-slate-400" />
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -563,18 +592,6 @@ export const Login: React.FC = () => {
             </form>
           )}
 
-          {/* Initial Super Admin Link Toggle */}
-          {!isForgotPassword && !isInitialSetup && activeTab === 'login' && (
-            <div className="mt-6 pt-4 border-t border-slate-200 text-center">
-              <button
-                type="button"
-                onClick={() => setIsInitialSetup(true)}
-                className="text-xs font-semibold text-slate-500 hover:text-amber-800 transition"
-              >
-                નવો સુપર એડમિન સેટઅપ કરવો છે? (પ્રથમ સેટઅપ)
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

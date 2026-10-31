@@ -18,6 +18,13 @@ import {
   Clock,
   Phone,
   Search,
+  Eye,
+  EyeOff,
+  Crown,
+  ArrowUpRight,
+  ArrowDownRight,
+  KeyRound,
+  AlertTriangle,
 } from 'lucide-react';
 
 export const AdminManagement: React.FC = () => {
@@ -31,22 +38,32 @@ export const AdminManagement: React.FC = () => {
   // Search filter
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Invite/Add User Modal
+  // Password visibility map: Record<userId, boolean>
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+
+  const togglePasswordVisibility = (id: string) => {
+    setVisiblePasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Invite/Add User Modal (Strictly IT Svayamsevak first)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'admin' | 'super_admin' | 'it_volunteer'>('it_volunteer');
+  const [showModalPassword, setShowModalPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Delete User
+  // Delete User Confirmation
   const [deletingProfile, setDeletingProfile] = useState<AdminProfile | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Processing Action (Approve / Reject)
+  // Promote to Super Admin Confirmation Modal (Transfer ownership)
+  const [promotingToSuperAdmin, setPromotingToSuperAdmin] = useState<AdminProfile | null>(null);
+
+  // Processing Action Loading
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,6 +81,7 @@ export const AdminManagement: React.FC = () => {
             role: 'super_admin',
             status: 'approved',
             email: 'admin@bapstithal.org',
+            plain_password: 'admin@tithal123',
             created_at: new Date().toISOString(),
           },
           {
@@ -73,6 +91,7 @@ export const AdminManagement: React.FC = () => {
             status: 'pending',
             email: 'akshay@example.com',
             mobile_number: '9876543210',
+            plain_password: 'akshay#baps789',
             created_at: new Date(Date.now() - 3600000).toISOString(),
           },
         ]);
@@ -95,7 +114,7 @@ export const AdminManagement: React.FC = () => {
     }
   };
 
-  // Approve a pending IT volunteer request
+  // 1. Approve a pending IT volunteer request
   const handleApprove = async (prof: AdminProfile) => {
     setActionLoadingId(prof.id);
     setErrorMsg('');
@@ -112,7 +131,7 @@ export const AdminManagement: React.FC = () => {
       setProfiles((prev) =>
         prev.map((p) => (p.id === prof.id ? { ...p, status: 'approved' } : p))
       );
-      setSuccessMsg(`"${prof.full_name}" ને SSD IT સ્વયંસેવક તરીકે સફળતાપૂર્વક મંજૂર (Approved) કરવામાં આવ્યા! હવે તેઓ લોગિન કરી શકશે.`);
+      setSuccessMsg(`"${prof.full_name}" ને SSD IT સ્વયંસેવક તરીકે સફળતાપૂર્વક મંજૂર કરવામાં આવ્યા! હવે તેઓ લોગિન કરી શકશે.`);
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err: any) {
       console.error('Error approving profile:', err);
@@ -122,7 +141,7 @@ export const AdminManagement: React.FC = () => {
     }
   };
 
-  // Reject a pending IT volunteer request
+  // 2. Reject a pending IT volunteer request
   const handleReject = async (prof: AdminProfile) => {
     setActionLoadingId(prof.id);
     setErrorMsg('');
@@ -139,7 +158,7 @@ export const AdminManagement: React.FC = () => {
       setProfiles((prev) =>
         prev.map((p) => (p.id === prof.id ? { ...p, status: 'rejected' } : p))
       );
-      setSuccessMsg(`"${prof.full_name}" ની વિનંતી નામંજૂર (Rejected) કરવામાં આવી.`);
+      setSuccessMsg(`"${prof.full_name}" ની વિનંતી નામંજૂર કરવામાં આવી.`);
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err: any) {
       console.error('Error rejecting profile:', err);
@@ -149,6 +168,104 @@ export const AdminManagement: React.FC = () => {
     }
   };
 
+  // 3. Promote IT Svayamsevak to Admin
+  const handlePromoteToAdmin = async (prof: AdminProfile) => {
+    setActionLoadingId(prof.id);
+    setErrorMsg('');
+    try {
+      if (isSupabaseConfigured) {
+        const { error } = await supabase
+          .from('admin_profiles')
+          .update({ role: 'admin' })
+          .eq('id', prof.id);
+
+        if (error) throw error;
+      }
+
+      setProfiles((prev) =>
+        prev.map((p) => (p.id === prof.id ? { ...p, role: 'admin' } : p))
+      );
+      setSuccessMsg(`"${prof.full_name}" ને સફળતાપૂર્વક એડમિન (Admin) તરીકે પ્રમોટ કરવામાં આવ્યા! તેઓ સેવા વિભાગ ઉમેરી શકશે.`);
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'એડમિન બનાવવામાં ભૂલ આવી.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // 4. Demote Admin back to IT Svayamsevak
+  const handleDemoteToIt = async (prof: AdminProfile) => {
+    setActionLoadingId(prof.id);
+    setErrorMsg('');
+    try {
+      if (isSupabaseConfigured) {
+        const { error } = await supabase
+          .from('admin_profiles')
+          .update({ role: 'it_volunteer' })
+          .eq('id', prof.id);
+
+        if (error) throw error;
+      }
+
+      setProfiles((prev) =>
+        prev.map((p) => (p.id === prof.id ? { ...p, role: 'it_volunteer' } : p))
+      );
+      setSuccessMsg(`"${prof.full_name}" નો રોલ બદલીને SSD IT સ્વયંસેવક કરવામાં આવ્યો.`);
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'રોલ બદલવામાં ભૂલ આવી.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // 5. Transfer / Promote Admin to Super Admin (Strictly 1 Super Admin)
+  const handleConfirmPromoteSuperAdmin = async () => {
+    if (!promotingToSuperAdmin || !currentUser) return;
+    setActionLoadingId(promotingToSuperAdmin.id);
+    setErrorMsg('');
+    try {
+      if (isSupabaseConfigured) {
+        // Step A: Demote current super admin to admin
+        const { error: demoteErr } = await supabase
+          .from('admin_profiles')
+          .update({ role: 'admin' })
+          .eq('id', currentUser.id);
+        if (demoteErr) throw demoteErr;
+
+        // Step B: Promote target admin to super admin
+        const { error: promoteErr } = await supabase
+          .from('admin_profiles')
+          .update({ role: 'super_admin' })
+          .eq('id', promotingToSuperAdmin.id);
+        if (promoteErr) throw promoteErr;
+      }
+
+      setProfiles((prev) =>
+        prev.map((p) => {
+          if (p.id === promotingToSuperAdmin.id) return { ...p, role: 'super_admin' };
+          if (p.id === currentUser.id) return { ...p, role: 'admin' };
+          return p;
+        })
+      );
+
+      setSuccessMsg(`"${promotingToSuperAdmin.full_name}" હવે મુખ્ય સુપર એડમિન બની ગયા છે! પેજ રીલોડ થઈ રહ્યું છે...`);
+      setPromotingToSuperAdmin(null);
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'સુપર એડમિન બનાવવામાં ભૂલ આવી.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // 6. Manual addition of an SSD IT Svayamsevak by Super Admin
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -161,12 +278,13 @@ export const AdminManagement: React.FC = () => {
           full_name: fullName.trim(),
           email: email.trim(),
           mobile_number: mobileNumber.trim() || null,
-          role,
+          plain_password: password,
+          role: 'it_volunteer',
           status: 'approved',
           created_at: new Date().toISOString(),
         };
         setProfiles((prev) => [newProf, ...prev]);
-        setSuccessMsg(`"${fullName}" સફળતાપૂર્વક ઉમેરાયા!`);
+        setSuccessMsg(`"${fullName}" ને SSD IT સ્વયંસેવક તરીકે સફળતાપૂર્વક ઉમેર્યા!`);
         setIsModalOpen(false);
         setIsSubmitting(false);
         setTimeout(() => setSuccessMsg(''), 3000);
@@ -180,7 +298,7 @@ export const AdminManagement: React.FC = () => {
         options: {
           data: {
             full_name: fullName.trim(),
-            role,
+            role: 'it_volunteer',
           },
         },
       });
@@ -188,19 +306,20 @@ export const AdminManagement: React.FC = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Insert admin profile directly as approved
+        // Insert admin profile as approved IT volunteer with plain_password
         const { error: profileError } = await supabase.from('admin_profiles').upsert({
           id: authData.user.id,
           full_name: fullName.trim(),
           email: email.trim(),
           mobile_number: mobileNumber.trim() || null,
-          role,
+          plain_password: password,
+          role: 'it_volunteer',
           status: 'approved',
         });
 
         if (profileError) throw profileError;
 
-        setSuccessMsg(`"${fullName}" ને સીધા મંજૂર એકાઉન્ટ સાથે ઉમેરવામાં આવ્યા!`);
+        setSuccessMsg(`"${fullName}" ને SSD IT સ્વયંસેવક તરીકે ઉમેરવામાં આવ્યા! જરૂર હોય તો તમે તેમને એડમિન તરીકે પ્રમોટ કરી શકો છો.`);
         setIsModalOpen(false);
         fetchProfiles();
         setTimeout(() => setSuccessMsg(''), 3000);
@@ -213,6 +332,7 @@ export const AdminManagement: React.FC = () => {
     }
   };
 
+  // 7. Delete profile (Only Super Admin can delete)
   const handleDeleteProfile = async () => {
     if (!deletingProfile) return;
     if (deletingProfile.id === currentUser?.id) {
@@ -265,9 +385,8 @@ export const AdminManagement: React.FC = () => {
   const rejectedItRequests = profiles.filter(
     (p) => p.role === 'it_volunteer' && p.status === 'rejected'
   );
-  const systemAdmins = profiles.filter(
-    (p) => p.role === 'super_admin' || p.role === 'admin'
-  );
+  const superAdminProfile = profiles.find((p) => p.role === 'super_admin');
+  const adminProfiles = profiles.filter((p) => p.role === 'admin');
 
   // Search filter applied to current tab
   const filteredApprovedIt = approvedItVolunteers.filter(
@@ -276,7 +395,7 @@ export const AdminManagement: React.FC = () => {
       (p.email && p.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const filteredAdmins = systemAdmins.filter(
+  const filteredAdmins = adminProfiles.filter(
     (p) =>
       p.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.email && p.email.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -292,7 +411,7 @@ export const AdminManagement: React.FC = () => {
             એડમિન અને IT સ્વયંસેવક વ્યવસ્થાપન
           </h1>
           <p className="text-slate-600 text-xs sm:text-sm mt-0.5">
-            SSD IT સ્વયંસેવકોની એક્સેસ વિનંતીઓ મંજૂર કરો અને સિસ્ટમ એડમિન્સનું સંચાલન કરો.
+            સુપર એડમિન પાસવર્ડ જોઈ શકે છે, IT સ્વયંસેવકોને મંજૂર કરી શકે છે અને તેમને એડમિન તરીકે પ્રમોટ કરી શકે છે.
           </p>
         </div>
 
@@ -302,14 +421,14 @@ export const AdminManagement: React.FC = () => {
             setEmail('');
             setMobileNumber('');
             setPassword('');
-            setRole(activeTab === 'it_volunteers' ? 'it_volunteer' : 'admin');
+            setShowModalPassword(false);
             setErrorMsg('');
             setIsModalOpen(true);
           }}
           className="px-4 py-2.5 bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-800 hover:to-amber-900 text-white rounded-xl text-xs sm:text-sm font-bold shadow flex items-center gap-2 transition"
         >
           <UserPlus className="w-4 h-4 text-amber-200" />
-          નવું એકાઉન્ટ ઉમેરો
+          નવો SSD IT સ્વયંસેવક ઉમેરો
         </button>
       </div>
 
@@ -328,6 +447,16 @@ export const AdminManagement: React.FC = () => {
         </div>
       )}
 
+      {/* SYSTEM RULE INFO BANNER */}
+      <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Crown className="w-4 h-4 text-amber-700 shrink-0" />
+          <span>
+            <strong>સિસ્ટમ અધિકાર નિયમ:</strong> સિસ્ટમમાં ફક્ત ૧ જ સુપર એડમિન રહેશે. તમામ વપરાશકર્તા પ્રથમ SSD IT સ્વયંસેવક બને છે, ત્યાર બાદ તેમને એડમિન બનાવી શકાય છે. ડેટા ડિલીટ કરવાનો અધિકાર ફક્ત સુપર એડમિન પાસે છે.
+          </span>
+        </div>
+      </div>
+
       {/* MAIN TABS */}
       <div className="flex border-b border-slate-200 gap-2 sm:gap-4">
         <button
@@ -339,7 +468,7 @@ export const AdminManagement: React.FC = () => {
           }`}
         >
           <Laptop className="w-4 h-4" />
-          <span>SSD IT સ્વયંસેવકો</span>
+          <span>SSD IT સ્વયંસેવકો ({approvedItVolunteers.length})</span>
           {pendingItRequests.length > 0 && (
             <span className="px-2 py-0.5 text-xs font-black bg-red-600 text-white rounded-full shadow animate-pulse">
               {pendingItRequests.length} પેન્ડિંગ
@@ -356,7 +485,7 @@ export const AdminManagement: React.FC = () => {
           }`}
         >
           <Shield className="w-4 h-4" />
-          <span>સિસ્ટમ એડમિન્સ ({systemAdmins.length})</span>
+          <span>સિસ્ટમ એડમિન્સ (સુપર એડમિન: 1 | એડમિન: {adminProfiles.length})</span>
         </button>
       </div>
 
@@ -375,7 +504,7 @@ export const AdminManagement: React.FC = () => {
                     મંજૂરી માટે પેન્ડિંગ વિનંતીઓ (Pending IT Volunteer Requests)
                   </h2>
                   <p className="text-xs text-amber-800">
-                    નીચેના સ્વયંસેવકોએ લોગિન એક્સેસ માટે વિનંતી કરી છે. મંજૂર કર્યા પછી જ તેઓ લોગિન કરી શકશે.
+                    નીચેના સ્વયંસેવકોએ લોગિન એક્સેસ માટે વિનંતી કરી છે. સુપર એડમિન પાસવર્ડ જોઈ શકે છે અને મંજૂર કરી શકે છે.
                   </p>
                 </div>
               </div>
@@ -422,7 +551,33 @@ export const AdminManagement: React.FC = () => {
                           <span>{req.mobile_number}</span>
                         </p>
                       )}
-                      <p className="text-[10px] text-slate-400 mt-1">
+
+                      {/* PASSWORD DISPLAY WITH EYE TOGGLE */}
+                      <div className="mt-2 p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+                          <KeyRound className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                          <span>પાસવર્ડ:</span>
+                          <span className="font-mono font-bold text-slate-900">
+                            {visiblePasswords[req.id]
+                              ? req.plain_password || 'સેટ કરેલ નથી'
+                              : '••••••••'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility(req.id)}
+                          className="p-1 text-slate-500 hover:text-slate-800 transition"
+                          title={visiblePasswords[req.id] ? 'પાસવર્ડ છુપાવો' : 'પાસવર્ડ જુઓ'}
+                        >
+                          {visiblePasswords[req.id] ? (
+                            <EyeOff className="w-4 h-4 text-slate-700" />
+                          ) : (
+                            <Eye className="w-4 h-4 text-slate-500" />
+                          )}
+                        </button>
+                      </div>
+
+                      <p className="text-[10px] text-slate-400 mt-2">
                         તારીખ: {new Date(req.created_at).toLocaleDateString('gu-IN')}
                       </p>
                     </div>
@@ -461,7 +616,7 @@ export const AdminManagement: React.FC = () => {
                   મંજૂર થયેલ SSD IT સ્વયંસેવકો ({approvedItVolunteers.length})
                 </h3>
                 <p className="text-xs text-slate-500">
-                  આ સ્વયંસેવકો આઈડી કાર્ડ માટે ફોટો પાડીને સ્વયંસેવક ઉમેરી શકે છે. તેઓ સ્વયંસેવક ડિલીટ કરી શકતા નથી.
+                  આ સ્વયંસેવકો ફોટો પાડીને વિગત ઉમેરી શકે છે. સુપર એડમિન તેમનો પાસવર્ડ જોઈ શકે છે અને જરૂર પડે તેમને <strong>એડમિન</strong> બનાવી શકે છે.
                 </p>
               </div>
 
@@ -482,9 +637,9 @@ export const AdminManagement: React.FC = () => {
                 <tr>
                   <th className="p-3.5">પૂરું નામ</th>
                   <th className="p-3.5">ઈમેઇલ / મોબાઈલ</th>
+                  <th className="p-3.5">પાસવર્ડ (Password)</th>
                   <th className="p-3.5">સ્થિતિ (Status)</th>
-                  <th className="p-3.5">મંજૂરી તારીખ</th>
-                  <th className="p-3.5 text-center">ક્રિયા</th>
+                  <th className="p-3.5 text-center">રોલ બદલો / ક્રિયા</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -515,22 +670,54 @@ export const AdminManagement: React.FC = () => {
                         )}
                       </td>
                       <td className="p-3.5">
+                        <div className="inline-flex items-center gap-2 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-mono text-xs">
+                          <span>
+                            {visiblePasswords[adm.id]
+                              ? adm.plain_password || 'સેટ નથી'
+                              : '••••••••'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => togglePasswordVisibility(adm.id)}
+                            className="text-slate-500 hover:text-slate-800 transition"
+                            title={visiblePasswords[adm.id] ? 'પાસવર્ડ છુપાવો' : 'પાસવર્ડ જુઓ'}
+                          >
+                            {visiblePasswords[adm.id] ? (
+                              <EyeOff className="w-3.5 h-3.5 text-slate-700" />
+                            ) : (
+                              <Eye className="w-3.5 h-3.5 text-slate-500" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                      <td className="p-3.5">
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                           <Check className="w-3 h-3" />
                           મંજૂર / સક્રિય
                         </span>
                       </td>
-                      <td className="p-3.5 text-slate-500 text-xs">
-                        {new Date(adm.created_at).toLocaleDateString('gu-IN')}
-                      </td>
                       <td className="p-3.5 text-center">
-                        <button
-                          onClick={() => setDeletingProfile(adm)}
-                          title="એક્સેસ દૂર કરો"
-                          className="p-1.5 rounded-lg text-rose-700 hover:bg-rose-50 transition"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          {/* PROMOTE TO ADMIN BUTTON */}
+                          <button
+                            onClick={() => handlePromoteToAdmin(adm)}
+                            disabled={actionLoadingId === adm.id}
+                            className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition disabled:opacity-50"
+                            title="આ IT સ્વયંસેવકને એડમિન બનાવો"
+                          >
+                            <Shield className="w-3.5 h-3.5" />
+                            <span>એડમિન બનાવો</span>
+                          </button>
+
+                          {/* DELETE BUTTON */}
+                          <button
+                            onClick={() => setDeletingProfile(adm)}
+                            title="એક્સેસ દૂર કરો"
+                            className="p-1.5 rounded-lg text-rose-700 hover:bg-rose-50 transition"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -539,7 +726,7 @@ export const AdminManagement: React.FC = () => {
             </table>
           </div>
 
-          {/* SECTION C: REJECTED REQUESTS (IF ANY) */}
+          {/* SECTION C: REJECTED REQUESTS */}
           {rejectedItRequests.length > 0 && (
             <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
               <h4 className="font-bold text-xs text-slate-600 mb-2">
@@ -578,106 +765,192 @@ export const AdminManagement: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: SYSTEM ADMINS */}
+      {/* TAB 2: SYSTEM ADMINS (SUPER ADMIN: 1, ADMINS) */}
       {activeTab === 'admins' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-amber-700" />
-                સિસ્ટમ એડમિન્સ ({systemAdmins.length})
-              </h3>
-              <p className="text-xs text-slate-500">
-                આ એડમિન્સ સમગ્ર પોર્ટલ, સેવા વિભાગો અને સ્વયંસેવકોનું સંચાલન કરી શકે છે.
-              </p>
+        <div className="space-y-6">
+          {/* SUPER ADMIN CARD (ONLY 1) */}
+          {superAdminProfile && (
+            <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 rounded-2xl p-5 text-white shadow-md border-2 border-[#DFC15D] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-inner">
+                  <Crown className="w-6 h-6 text-slate-950" />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-200 text-[11px] font-bold border border-amber-300/40 mb-1">
+                    <Crown className="w-3 h-3 text-amber-300" />
+                    મુખ્ય સુપર એડમિન (Super Admin - ફક્ત ૧)
+                  </div>
+                  <h3 className="text-xl font-extrabold text-white">
+                    {superAdminProfile.full_name}
+                  </h3>
+                  <p className="text-xs text-amber-200/90 mt-0.5">
+                    {superAdminProfile.email || 'superadmin@bapstithal.org'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Password of Super Admin */}
+              <div className="bg-black/30 px-3.5 py-2 rounded-xl border border-amber-400/30 flex items-center gap-2">
+                <KeyRound className="w-4 h-4 text-amber-300" />
+                <span className="text-xs text-amber-200">પાસવર્ડ:</span>
+                <span className="font-mono font-bold text-xs text-white">
+                  {visiblePasswords[superAdminProfile.id]
+                    ? superAdminProfile.plain_password || '********'
+                    : '••••••••'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility(superAdminProfile.id)}
+                  className="text-amber-300 hover:text-white transition ml-1"
+                  title={visiblePasswords[superAdminProfile.id] ? 'છુપાવો' : 'જુઓ'}
+                >
+                  {visiblePasswords[superAdminProfile.id] ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ADMINS LIST TABLE */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-amber-700" />
+                  એડમિન્સ લિસ્ટ ({adminProfiles.length})
+                </h3>
+                <p className="text-xs text-slate-500">
+                  આ એડમિન્સ સેવા વિભાગો ઉમેરી શકે છે, ID કાર્ડ બનાવી શકે છે, પરંતુ ડેટા ડિલીટ કરી શકતા નથી.
+                </p>
+              </div>
+
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="નામ અથવા ઈમેઇલ શોધો..."
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600"
+                />
+              </div>
             </div>
 
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="નામ અથવા ઈમેઇલ શોધો..."
-                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600"
-              />
-            </div>
-          </div>
-
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-extrabold">
-              <tr>
-                <th className="p-3.5">પૂરું નામ</th>
-                <th className="p-3.5">ઈમેઇલ</th>
-                <th className="p-3.5">રોલ (Role)</th>
-                <th className="p-3.5">બનાવ્યા તારીખ</th>
-                <th className="p-3.5 text-center">ક્રિયા</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredAdmins.length === 0 ? (
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-extrabold">
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-slate-500">
-                    કોઈ એડમિન મળ્યા નથી.
-                  </td>
+                  <th className="p-3.5">પૂરું નામ</th>
+                  <th className="p-3.5">ઈમેઇલ</th>
+                  <th className="p-3.5">પાસવર્ડ (Password)</th>
+                  <th className="p-3.5">રોલ</th>
+                  <th className="p-3.5 text-center">રોલ પ્રમોશન / ક્રિયા</th>
                 </tr>
-              ) : (
-                filteredAdmins.map((adm) => (
-                  <tr key={adm.id} className="hover:bg-amber-50/20 transition">
-                    <td className="p-3.5 font-bold text-slate-900 flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-xs">
-                        {adm.full_name.charAt(0)}
-                      </div>
-                      <span>{adm.full_name}</span>
-                    </td>
-                    <td className="p-3.5 text-slate-600">
-                      {adm.email || '—'}
-                    </td>
-                    <td className="p-3.5">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          adm.role === 'super_admin'
-                            ? 'bg-purple-100 text-purple-900 border border-purple-200'
-                            : 'bg-amber-100 text-amber-900 border border-amber-200'
-                        }`}
-                      >
-                        <Shield className="w-3 h-3" />
-                        {adm.role === 'super_admin' ? 'સુપર એડમિન' : 'એડમિન'}
-                      </span>
-                    </td>
-                    <td className="p-3.5 text-slate-500 text-xs">
-                      {new Date(adm.created_at).toLocaleDateString('gu-IN')}
-                    </td>
-                    <td className="p-3.5 text-center">
-                      <button
-                        onClick={() => setDeletingProfile(adm)}
-                        disabled={adm.id === currentUser?.id}
-                        className={`p-1.5 rounded-lg transition ${
-                          adm.id === currentUser?.id
-                            ? 'text-slate-300 cursor-not-allowed'
-                            : 'text-rose-700 hover:bg-rose-50'
-                        }`}
-                        title="એકાઉન્ટ ડિલીટ કરો"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredAdmins.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-8 text-slate-500">
+                      હાલમાં કોઈ એડમિન નથી. તમે "SSD IT સ્વયંસેવકો" ટેબમાંથી કોઈપણ માન્ય સ્વયંસેવકને "એડમિન બનાવો" બટન ક્લિક કરીને અહીં લાવી શકો છો.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredAdmins.map((adm) => (
+                    <tr key={adm.id} className="hover:bg-amber-50/20 transition">
+                      <td className="p-3.5 font-bold text-slate-900 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-xs">
+                          {adm.full_name.charAt(0)}
+                        </div>
+                        <span>{adm.full_name}</span>
+                      </td>
+                      <td className="p-3.5 text-slate-600">
+                        {adm.email || '—'}
+                      </td>
+                      <td className="p-3.5">
+                        <div className="inline-flex items-center gap-2 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 font-mono text-xs">
+                          <span>
+                            {visiblePasswords[adm.id]
+                              ? adm.plain_password || 'સેટ નથી'
+                              : '••••••••'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => togglePasswordVisibility(adm.id)}
+                            className="text-slate-500 hover:text-slate-800 transition"
+                            title={visiblePasswords[adm.id] ? 'પાસવર્ડ છુપાવો' : 'પાસવર્ડ જુઓ'}
+                          >
+                            {visiblePasswords[adm.id] ? (
+                              <EyeOff className="w-3.5 h-3.5 text-slate-700" />
+                            ) : (
+                              <Eye className="w-3.5 h-3.5 text-slate-500" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                      <td className="p-3.5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                          <Shield className="w-3 h-3" />
+                          એડમિન (Admin)
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          {/* PROMOTE TO SUPER ADMIN BUTTON */}
+                          <button
+                            onClick={() => setPromotingToSuperAdmin(adm)}
+                            disabled={actionLoadingId === adm.id}
+                            className="px-2.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition disabled:opacity-50"
+                            title="આ એડમિનને મુખ્ય સુપર એડમિન બનાવો"
+                          >
+                            <Crown className="w-3.5 h-3.5 text-amber-300" />
+                            <span>સુપર એડમિન બનાવો</span>
+                          </button>
+
+                          {/* DEMOTE TO IT VOLUNTEER BUTTON */}
+                          <button
+                            onClick={() => handleDemoteToIt(adm)}
+                            disabled={actionLoadingId === adm.id}
+                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition disabled:opacity-50"
+                            title="પાછા IT સ્વયંસેવક બનાવો"
+                          >
+                            <ArrowDownRight className="w-3.5 h-3.5 text-slate-500" />
+                            <span>IT સ્વયંસેવક</span>
+                          </button>
+
+                          {/* DELETE BUTTON */}
+                          <button
+                            onClick={() => setDeletingProfile(adm)}
+                            disabled={adm.id === currentUser?.id}
+                            className={`p-1.5 rounded-lg transition ${
+                              adm.id === currentUser?.id
+                                ? 'text-slate-300 cursor-not-allowed'
+                                : 'text-rose-700 hover:bg-rose-50'
+                            }`}
+                            title="એકાઉન્ટ ડિલીટ કરો"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* ADD USER MODAL */}
+      {/* ADD SSD IT VOLUNTEER MODAL (STRICTLY IT SVAYAMSEVAK FIRST) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="px-5 py-4 bg-gradient-to-r from-amber-700 to-amber-900 text-white flex items-center justify-between">
               <h3 className="font-bold text-base flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-amber-200" />
-                નવું એકાઉન્ટ ઉમેરો
+                <Laptop className="w-5 h-5 text-amber-200" />
+                નવો SSD IT સ્વયંસેવક ઉમેરો
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -688,6 +961,10 @@ export const AdminManagement: React.FC = () => {
             </div>
 
             <form onSubmit={handleAddUser} className="p-6 space-y-4">
+              <div className="p-3 bg-blue-50 border border-blue-200 text-xs text-blue-900 rounded-xl space-y-1">
+                <strong>નિયમ:</strong> સિસ્ટમમાં સીધા એડમિન બનાવી શકાતા નથી. પ્રથમ SSD IT સ્વયંસેવક તરીકે ઉમેરાશે, ત્યાર બાદ તમે તેમને અહીંથી 'એડમિન બનાવો' બટનથી પ્રમોટ કરી શકશો.
+              </div>
+
               {errorMsg && (
                 <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
@@ -741,33 +1018,25 @@ export const AdminManagement: React.FC = () => {
                 <label className="block text-sm font-bold text-slate-800 mb-1">
                   પાસવર્ડ (Password - ઓછામાં ઓછા 6 અક્ષર) *
                 </label>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-800 mb-1">
-                  રોલ (Role) *
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as any)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-semibold"
-                >
-                  <option value="it_volunteer">SSD IT સ્વયંસેવક (IT Volunteer - ફોટો અને વિગત ઉમેરવા)</option>
-                  <option value="admin">એડમિન (Admin)</option>
-                  <option value="super_admin">સુપર એડમિન (Super Admin)</option>
-                </select>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  * SSD IT સ્વયંસેવક માત્ર ફોટો પાડીને વિગત ઉમેરી શકે છે, કોઈ ડેટા ડિલીટ કરી શકતા નથી.
-                </p>
+                <div className="relative">
+                  <input
+                    type={showModalPassword ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-3 pr-10 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowModalPassword(!showModalPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition"
+                    title={showModalPassword ? 'પાસવર્ડ છુપાવો' : 'પાસવર્ડ જુઓ'}
+                  >
+                    {showModalPassword ? <EyeOff className="w-4 h-4 text-slate-700" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex gap-2 pt-2">
@@ -776,7 +1045,7 @@ export const AdminManagement: React.FC = () => {
                   disabled={isSubmitting}
                   className="flex-1 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-bold rounded-xl text-sm transition shadow flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? 'ઉમેરાઈ રહ્યું છે...' : 'એકાઉન્ટ બનાવો'}
+                  {isSubmitting ? 'ઉમેરાઈ રહ્યું છે...' : 'SSD IT સ્વયંસેવક બનાવો'}
                 </button>
                 <button
                   type="button"
@@ -787,6 +1056,44 @@ export const AdminManagement: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* PROMOTE TO SUPER ADMIN CONFIRMATION MODAL */}
+      {promotingToSuperAdmin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 text-center space-y-4">
+            <div className="w-14 h-14 rounded-full bg-purple-100 text-purple-800 mx-auto flex items-center justify-center border-2 border-purple-300">
+              <Crown className="w-8 h-8 text-purple-700" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-slate-900 text-lg">
+                સુપર એડમિન ટ્રાન્સફર કન્ફર્મેશન
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                સિસ્ટમમાં ફક્ત <strong>૧ જ સુપર એડમિન</strong> રહી શકે છે. જો તમે <strong>"{promotingToSuperAdmin.full_name}"</strong> ને મુખ્ય સુપર એડમિન બનાવશો, તો તમારો રોલ આપોઆપ બદલાઈને <strong>'એડમિન'</strong> થઈ જશે.
+              </p>
+              <div className="mt-3 p-3 bg-purple-50 rounded-xl border border-purple-200 text-xs text-purple-950 font-medium">
+                શું તમે ખરેખર મુખ્ય સુપર એડમિન અધિકાર ટ્રાન્સફર કરવા માંગો છો?
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={handleConfirmPromoteSuperAdmin}
+                disabled={actionLoadingId === promotingToSuperAdmin.id}
+                className="flex-1 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs sm:text-sm transition shadow flex items-center justify-center gap-1.5"
+              >
+                <Crown className="w-4 h-4 text-amber-300" />
+                <span>હા, સુપર એડમિન બનાવો</span>
+              </button>
+              <button
+                onClick={() => setPromotingToSuperAdmin(null)}
+                className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-xl text-xs sm:text-sm transition"
+              >
+                રદ કરો
+              </button>
+            </div>
           </div>
         </div>
       )}

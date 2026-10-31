@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 export const VolunteersList: React.FC = () => {
-  const { isItVolunteer } = useAuth();
+  const { isSuperAdmin } = useAuth();
   const [searchParams] = useSearchParams();
   const previewModalCardRef = useRef<HTMLDivElement>(null);
 
@@ -149,8 +149,8 @@ export const VolunteersList: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (isItVolunteer) {
-      alert('SSD IT સ્વયંસેવક પાસે સ્વયંસેવક ડિલીટ કરવાની પરવાનગી નથી.');
+    if (!isSuperAdmin) {
+      alert('સ્વયંસેવક ડિલીટ કરવાનો અધિકાર ફક્ત સુપર એડમિન પાસે છે.');
       setDeletingVolunteer(null);
       return;
     }
@@ -470,7 +470,7 @@ export const VolunteersList: React.FC = () => {
                             <Edit className="w-4 h-4" />
                           </Link>
 
-                          {!isItVolunteer && (
+                          {isSuperAdmin && (
                             <button
                               onClick={() => setDeletingVolunteer(vol)}
                               title="ડિલીટ કરો"

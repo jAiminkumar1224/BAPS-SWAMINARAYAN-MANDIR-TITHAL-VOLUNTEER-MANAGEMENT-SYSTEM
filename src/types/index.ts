@@ -27,6 +27,7 @@ export interface AdminProfile {
   status: 'pending' | 'approved' | 'rejected';
   email?: string | null;
   mobile_number?: string | null;
+  plain_password?: string | null;
   created_at: string;
 }
 

@@ -46,12 +46,12 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
       return 'text-[19px] sm:text-[23px]';
     };
 
-    // Auto font size for Seva Vibhag at the bottom (replacing the quote)
+    // Prominent large font size for Seva Vibhag at the bottom (bold designation)
     const getVibhagFontSize = (text: string) => {
       const len = text ? text.length : 0;
-      if (len > 24) return 'text-[13px] sm:text-[15px]';
-      if (len > 18) return 'text-[15px] sm:text-[17.5px]';
-      return 'text-[17px] sm:text-[20px]';
+      if (len > 24) return 'text-[16px] sm:text-[19px]';
+      if (len > 16) return 'text-[19px] sm:text-[23px]';
+      return 'text-[22px] sm:text-[27px]';
     };
 
     return (
@@ -198,28 +198,30 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </div>
         </div>
 
-        {/* 4. DYNAMIC SEVA VIBHAG (AT THE BOTTOM, REPLACING THE LAST QUOTE) */}
-        {/* Optical center: X: 50.0%, Y: 93.0%, Width: 90.0%, Height: 5.5% */}
+        {/* 4. DYNAMIC SEVA VIBHAG (PROMINENT LARGE FONT AT BOTTOM, QUOTE COMPLETELY REMOVED) */}
+        {/* Optical center: X: 50.0%, Y: 93.2%, Width: 92.0%, Height: 6.0% */}
         <div
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '93.0%',
+            top: '93.2%',
             left: '50.0%',
-            width: '90.0%',
-            height: '5.5%',
+            width: '92.0%',
+            height: '6.0%',
             transform: 'translate(-50%, -50%)',
           }}
         >
-          <span
-            className={`font-black tracking-wide text-[#0C3260] text-center leading-[1.15] whitespace-nowrap overflow-visible drop-shadow-sm ${getVibhagFontSize(
-              sevaVibhagName || 'સ્વયંસેવક દળ'
-            )}`}
-            style={{
-              fontFamily: "'Noto Sans Gujarati', sans-serif",
-            }}
-          >
-            {sevaVibhagName || 'સ્વયંસેવક દળ'}
-          </span>
+          <div className="w-full flex items-center justify-center py-0.5 rounded-full bg-[#C2E8FD]/80 backdrop-blur-[1px]">
+            <span
+              className={`font-black tracking-wider text-[#0A2E5C] text-center leading-[1.2] whitespace-nowrap overflow-visible drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)] ${getVibhagFontSize(
+                sevaVibhagName || 'સ્વયંસેવક દળ'
+              )}`}
+              style={{
+                fontFamily: "'Noto Sans Gujarati', sans-serif",
+              }}
+            >
+              {sevaVibhagName || 'સ્વયંસેવક દળ'}
+            </span>
+          </div>
         </div>
       </div>
     );

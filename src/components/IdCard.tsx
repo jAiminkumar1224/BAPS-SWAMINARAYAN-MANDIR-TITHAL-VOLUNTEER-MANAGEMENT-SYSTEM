@@ -49,9 +49,9 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
     // Auto font size for Volunteer Name
     const getNameFontSize = (text: string) => {
       const len = text ? text.length : 0;
-      if (len > 28) return 'text-[11px] sm:text-[12px]';
-      if (len > 20) return 'text-[12px] sm:text-[13.5px]';
-      return 'text-[13px] sm:text-[14.5px]';
+      if (len > 28) return 'text-[10px] sm:text-[11.5px]';
+      if (len > 20) return 'text-[11px] sm:text-[12.5px]';
+      return 'text-[12px] sm:text-[13.5px]';
     };
 
     return (
@@ -137,116 +137,81 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </span>
         </div>
 
-        {/* 3. DYNAMIC VOLUNTEER DETAILS - EXACT BASELINE AND FONT AS LABELS */}
-        {/* All values are aligned directly to the pre-printed title baselines and colon dots */}
-
-        {/* Line 1: ID (baseline alignment: top = 72.10%) */}
+        {/* 3. DYNAMIC DETAILS NAVY BOX (HEIGHT INCREASED & BALANCED FROM TOP & BOTTOM) */}
+        {/* Bounds: Left: 5.5%, Top: 68.2%, Width: 89.0%, Height: 21.0% */}
+        {/* Solid #00366C background completely covers the old pre-printed box, labels and QR code */}
+        {/* Titles and values are rendered together in the same flex row, guaranteeing 100% exact alignment in English or Gujarati! */}
         <div
-          className="absolute z-10 flex items-center"
+          className="absolute z-10 rounded-xl border-[2px] border-white flex items-center justify-between p-2.5 sm:p-3 shadow-md"
           style={{
-            top: '72.10%',
-            left: '19.5%',
-            width: '53.0%',
-            transform: 'translateY(-50%)',
+            top: '68.2%',
+            left: '5.5%',
+            width: '89.0%',
+            height: '21.0%',
+            backgroundColor: '#00366C',
+            boxSizing: 'border-box',
           }}
         >
-          <span
-            className="font-extrabold text-white leading-none tracking-wider text-[12px] sm:text-[13.5px] select-text drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]"
-            style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-          >
-            {cleanVolunteerId}
-          </span>
-        </div>
+          {/* Left Column: 5 Detail Rows */}
+          <div className="flex-1 h-full flex flex-col justify-between pr-2.5 min-w-0">
+            {/* Line 1: ID */}
+            <div className="flex items-center min-w-0">
+              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
+                ID :
+              </span>
+              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wider truncate select-text">
+                {cleanVolunteerId}
+              </span>
+            </div>
 
-        {/* Line 2: Name (baseline alignment: top = 75.20%) */}
-        <div
-          className="absolute z-10 flex items-center"
-          style={{
-            top: '75.20%',
-            left: '19.5%',
-            width: '53.0%',
-            transform: 'translateY(-50%)',
-          }}
-        >
-          <span
-            className={`font-extrabold text-white leading-none truncate select-text drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)] ${getNameFontSize(
-              name || '—'
-            )}`}
-            style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-            title={name}
-          >
-            {name || '—'}
-          </span>
-        </div>
+            {/* Line 2: Name */}
+            <div className="flex items-center min-w-0">
+              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
+                નામ :
+              </span>
+              <span
+                className={`font-extrabold text-white truncate select-text ${getNameFontSize(
+                  name || '—'
+                )}`}
+                title={name}
+              >
+                {name || '—'}
+              </span>
+            </div>
 
-        {/* Line 3: Mobile (baseline alignment: top = 78.30%) */}
-        <div
-          className="absolute z-10 flex items-center"
-          style={{
-            top: '78.30%',
-            left: '19.5%',
-            width: '53.0%',
-            transform: 'translateY(-50%)',
-          }}
-        >
-          <span
-            className="font-extrabold text-white leading-none tracking-widest text-[12px] sm:text-[13px] select-text drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]"
-            style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-          >
-            {mobileNumber || '—'}
-          </span>
-        </div>
+            {/* Line 3: Mobile */}
+            <div className="flex items-center min-w-0">
+              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
+                મો. :
+              </span>
+              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-widest truncate select-text">
+                {mobileNumber || '—'}
+              </span>
+            </div>
 
-        {/* Line 4: Village (baseline alignment: top = 81.30%) */}
-        <div
-          className="absolute z-10 flex items-center"
-          style={{
-            top: '81.30%',
-            left: '19.5%',
-            width: '53.0%',
-            transform: 'translateY(-50%)',
-          }}
-        >
-          <span
-            className="font-extrabold text-white leading-none truncate text-[12px] sm:text-[13.5px] select-text drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]"
-            style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-          >
-            {villageName || '—'}
-          </span>
-        </div>
+            {/* Line 4: Village */}
+            <div className="flex items-center min-w-0">
+              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
+                ગામ :
+              </span>
+              <span className="font-extrabold text-white text-[11px] sm:text-[13px] truncate select-text">
+                {villageName || '—'}
+              </span>
+            </div>
 
-        {/* Line 5: Kshetra (baseline alignment: top = 84.50%) */}
-        <div
-          className="absolute z-10 flex items-center"
-          style={{
-            top: '84.50%',
-            left: '19.5%',
-            width: '53.0%',
-            transform: 'translateY(-50%)',
-          }}
-        >
-          <span
-            className="font-extrabold text-white leading-none truncate text-[12px] sm:text-[13.5px] select-text drop-shadow-[0_1px_1px_rgba(0,0,0,0.45)]"
-            style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-          >
-            {xetraName || '—'}
-          </span>
-        </div>
+            {/* Line 5: Kshetra */}
+            <div className="flex items-center min-w-0">
+              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
+                ક્ષેત્ર :
+              </span>
+              <span className="font-extrabold text-white text-[11px] sm:text-[13px] truncate select-text">
+                {xetraName || '—'}
+              </span>
+            </div>
+          </div>
 
-        {/* 4. DYNAMIC QR CODE CONTAINER (100% SEAMLESS ACCURATE OVERLAP OF BEHIND QR CODE) */}
-        {/* Exact template QR box bounds: Left 577px to 704px, Top 734px to 866px */}
-        {/* Center: X: 84.72%, Y: 78.12%, Width: 16.6%, Height: 13.0%, rounded-xl */}
-        <div
-          className="absolute z-10 flex items-center justify-center p-1.5 bg-white rounded-xl shadow-sm pointer-events-none"
-          style={{
-            top: '78.12%',
-            left: '84.72%',
-            width: '16.6%',
-            height: '13.0%',
-            transform: 'translate(-50%, -50%)',
-          }}
-        >
-          <div className="w-full h-full flex items-center justify-center bg-white">
+          {/* Right Column: Dynamic QR Code Container */}
+          <div className="shrink-0 h-full aspect-square flex items-center justify-center p-1 bg-white rounded-lg shadow-sm">
             <QRCodeSVG
               value={verificationUrl}
               size={120}

@@ -63,6 +63,11 @@ export const AdminManagement: React.FC = () => {
   // Promote to Super Admin Confirmation Modal (Transfer ownership)
   const [promotingToSuperAdmin, setPromotingToSuperAdmin] = useState<AdminProfile | null>(null);
 
+  // Super Admin Password Quick Update State
+  const [isEditingSuperAdminPw, setIsEditingSuperAdminPw] = useState(false);
+  const [superAdminNewPw, setSuperAdminNewPw] = useState('');
+  const [isSavingSuperAdminPw, setIsSavingSuperAdminPw] = useState(false);
+
   // Processing Action Loading
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
@@ -111,6 +116,36 @@ export const AdminManagement: React.FC = () => {
       console.error('Error fetching admin profiles:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Update Super Admin Password in admin_profiles
+  const handleUpdateSuperAdminPw = async () => {
+    if (!superAdminNewPw.trim() || !superAdminProfile) return;
+    setIsSavingSuperAdminPw(true);
+    try {
+      if (isSupabaseConfigured) {
+        const { error } = await supabase
+          .from('admin_profiles')
+          .update({ plain_password: superAdminNewPw.trim() })
+          .eq('id', superAdminProfile.id);
+        if (error) throw error;
+      }
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === superAdminProfile.id
+            ? { ...p, plain_password: superAdminNewPw.trim() }
+            : p
+        )
+      );
+      setSuccessMsg('સુપર એડમિન પાસવર્ડ સફળતાપૂર્વક અપડેટ થયો!');
+      setIsEditingSuperAdminPw(false);
+      setSuperAdminNewPw('');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err: any) {
+      alert(err.message || 'પાસવર્ડ સાચવવામાં ભૂલ આવી.');
+    } finally {
+      setIsSavingSuperAdminPw(false);
     }
   };
 
@@ -291,39 +326,26 @@ export const AdminManagement: React.FC = () => {
         return;
       }
 
-      // Create Auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-            role: 'it_volunteer',
-          },
-        },
+      // Use RPC to register without email rate limits, directly approved
+      const { data: rpcRes, error: rpcError } = await supabase.rpc('register_it_volunteer', {
+        p_full_name: fullName.trim(),
+        p_email: email.trim(),
+        p_mobile_number: mobileNumber.trim() || null,
+        p_password: password,
+        p_status: 'approved',
       });
 
-      if (authError) throw authError;
+      if (rpcError) throw rpcError;
 
-      if (authData.user) {
-        // Insert admin profile as approved IT volunteer with plain_password
-        const { error: profileError } = await supabase.from('admin_profiles').upsert({
-          id: authData.user.id,
-          full_name: fullName.trim(),
-          email: email.trim(),
-          mobile_number: mobileNumber.trim() || null,
-          plain_password: password,
-          role: 'it_volunteer',
-          status: 'approved',
-        });
-
-        if (profileError) throw profileError;
-
-        setSuccessMsg(`"${fullName}" ને SSD IT સ્વયંસેવક તરીકે ઉમેરવામાં આવ્યા! જરૂર હોય તો તમે તેમને એડમિન તરીકે પ્રમોટ કરી શકો છો.`);
-        setIsModalOpen(false);
-        fetchProfiles();
-        setTimeout(() => setSuccessMsg(''), 3000);
+      if (rpcRes && !rpcRes.success) {
+        setErrorMsg(rpcRes.message || 'આ ઈમેઇલ પહેલેથી નોંધાયેલ છે.');
+        return;
       }
+
+      setSuccessMsg(`"${fullName}" ને SSD IT સ્વયંસેવક તરીકે ઉમેરવામાં આવ્યા! જરૂર હોય તો તમે તેમને એડમિન તરીકે પ્રમોટ કરી શકો છો.`);
+      setIsModalOpen(false);
+      fetchProfiles();
+      setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err: any) {
       console.error('Error adding user:', err);
       setErrorMsg(err.message || 'એકાઉન્ટ ઉમેરવામાં ભૂલ આવી.');
@@ -790,26 +812,66 @@ export const AdminManagement: React.FC = () => {
               </div>
 
               {/* Password of Super Admin */}
-              <div className="bg-black/30 px-3.5 py-2 rounded-xl border border-amber-400/30 flex items-center gap-2">
+              <div className="bg-black/30 px-3.5 py-2 rounded-xl border border-amber-400/30 flex flex-wrap items-center gap-2">
                 <KeyRound className="w-4 h-4 text-amber-300" />
                 <span className="text-xs text-amber-200">પાસવર્ડ:</span>
-                <span className="font-mono font-bold text-xs text-white">
-                  {visiblePasswords[superAdminProfile.id]
-                    ? superAdminProfile.plain_password || '********'
-                    : '••••••••'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility(superAdminProfile.id)}
-                  className="text-amber-300 hover:text-white transition ml-1"
-                  title={visiblePasswords[superAdminProfile.id] ? 'છુપાવો' : 'જુઓ'}
-                >
-                  {visiblePasswords[superAdminProfile.id] ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
+                
+                {isEditingSuperAdminPw ? (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={superAdminNewPw}
+                      onChange={(e) => setSuperAdminNewPw(e.target.value)}
+                      placeholder="નવો પાસવર્ડ દાખલ કરો"
+                      className="px-2 py-1 text-xs bg-white text-slate-900 rounded font-mono outline-none border border-amber-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleUpdateSuperAdminPw}
+                      disabled={isSavingSuperAdminPw}
+                      className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded text-xs transition"
+                    >
+                      {isSavingSuperAdminPw ? '...' : 'સાચવો'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingSuperAdminPw(false)}
+                      className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white rounded text-xs"
+                    >
+                      રદ
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span className="font-mono font-bold text-xs text-amber-100 bg-black/40 px-2 py-0.5 rounded">
+                      {visiblePasswords[superAdminProfile.id]
+                        ? (superAdminProfile.plain_password || '(પાસવર્ડ સેટ નથી)')
+                        : '••••••••'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility(superAdminProfile.id)}
+                      className="text-amber-300 hover:text-white transition p-1 rounded hover:bg-white/10"
+                      title={visiblePasswords[superAdminProfile.id] ? 'પાસવર્ડ છુપાવો' : 'પાસવર્ડ જુઓ'}
+                    >
+                      {visiblePasswords[superAdminProfile.id] ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSuperAdminNewPw(superAdminProfile.plain_password || '');
+                        setIsEditingSuperAdminPw(true);
+                      }}
+                      className="text-[11px] underline text-amber-300 hover:text-amber-100 ml-1"
+                    >
+                      {superAdminProfile.plain_password ? 'બદલો' : 'સેટ કરો'}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}

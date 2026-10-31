@@ -18,6 +18,10 @@ export interface Volunteer {
   created_at: string;
   updated_at?: string;
   seva_vibhag?: SevaVibhag | null;
+  email?: string | null;
+  group_name?: string | null;
+  duty_start_date?: string | null;
+  duty_end_date?: string | null;
 }
 
 export interface AdminProfile {
@@ -40,4 +44,9 @@ export interface VerificationData {
   photo_path: string | null;
   created_at: string;
   is_valid: boolean;
+  email?: string | null;
+  mobile_number?: string | null;
+  group_name?: string | null;
+  duty_start_date?: string | null;
+  duty_end_date?: string | null;
 }

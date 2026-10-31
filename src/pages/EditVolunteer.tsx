@@ -4,6 +4,7 @@ import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supa
 import { SevaVibhag, Volunteer } from '../types';
 import { KSHETRA_LIST } from '../constants/kshetra';
 import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
+import { VOLUNTEER_GROUPS } from '../constants/groups';
 import { IdCard } from '../components/IdCard';
 import { PhotoCropModal } from '../components/PhotoCropModal';
 import { downloadCardAsPdf, downloadCardAsPng, printCard } from '../utils/exportCard';
@@ -25,10 +26,12 @@ export const EditVolunteer: React.FC = () => {
 
   const [volunteer, setVolunteer] = useState<Volunteer | null>(null);
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [villageName, setVillageName] = useState('');
   const [xetraName, setXetraName] = useState('');
   const [sevaVibhagId, setSevaVibhagId] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('group_a');
   const [selectedDeptName, setSelectedDeptName] = useState('સ્વયંસેવક દળ');
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [newPhotoBlob, setNewPhotoBlob] = useState<Blob | null>(null);
@@ -54,11 +57,16 @@ export const EditVolunteer: React.FC = () => {
         if (found) {
           setVolunteer(found);
           setName(found.name);
+          setEmail(found.email || '');
           setMobileNumber(found.mobile_number);
           setVillageName(found.village_name);
           setXetraName(found.xetra_name);
           setSevaVibhagId(found.seva_vibhag_id || '1');
           setSelectedDeptName(found.seva_vibhag?.name || 'સ્વયંસેવક દળ');
+          const matchedGroup = VOLUNTEER_GROUPS.find(
+            (g) => g.name === found.group_name || g.startDate === found.duty_start_date
+          );
+          setSelectedGroupId(matchedGroup ? matchedGroup.id : 'group_a');
           setPhotoPreviewUrl(found.photo_path);
         }
         setDepartments(DEFAULT_MOCK_SEVA_VIBHAGS);
@@ -87,11 +95,16 @@ export const EditVolunteer: React.FC = () => {
         const v = volData as unknown as Volunteer;
         setVolunteer(v);
         setName(v.name);
+        setEmail(v.email || '');
         setMobileNumber(v.mobile_number);
         setVillageName(v.village_name);
         setXetraName(v.xetra_name);
         setSevaVibhagId(v.seva_vibhag_id || '');
         setSelectedDeptName(v.seva_vibhag?.name || 'સ્વયંસેવક દળ');
+        const matchedGroup = VOLUNTEER_GROUPS.find(
+          (g) => g.name === v.group_name || g.startDate === v.duty_start_date
+        );
+        setSelectedGroupId(matchedGroup ? matchedGroup.id : 'group_a');
         if (v.photo_path) {
           setPhotoPreviewUrl(getStoragePublicUrl(v.photo_path));
         }
@@ -156,16 +169,23 @@ export const EditVolunteer: React.FC = () => {
         }
       }
 
+      const selectedGroup =
+        VOLUNTEER_GROUPS.find((g) => g.id === selectedGroupId) || VOLUNTEER_GROUPS[0];
+
       if (isSupabaseConfigured) {
         const { error: updateError } = await supabase
           .from('volunteers')
           .update({
             name: name.trim(),
+            email: email.trim() || null,
             mobile_number: mobileNumber.trim(),
             village_name: villageName.trim(),
             xetra_name: xetraName.trim(),
             seva_vibhag_id: sevaVibhagId,
             photo_path: finalPhotoPath,
+            group_name: selectedGroup.name,
+            duty_start_date: selectedGroup.startDate,
+            duty_end_date: selectedGroup.endDate,
           })
           .eq('id', volunteer.id);
 
@@ -178,12 +198,16 @@ export const EditVolunteer: React.FC = () => {
             ? {
                 ...v,
                 name: name.trim(),
+                email: email.trim() || null,
                 mobile_number: mobileNumber.trim(),
                 village_name: villageName.trim(),
                 xetra_name: xetraName.trim(),
                 seva_vibhag_id: sevaVibhagId,
                 photo_path: finalPhotoPath,
                 seva_vibhag: { id: sevaVibhagId, name: selectedDeptName, is_active: true },
+                group_name: selectedGroup.name,
+                duty_start_date: selectedGroup.startDate,
+                duty_end_date: selectedGroup.endDate,
               }
             : v
         );
@@ -298,25 +322,40 @@ export const EditVolunteer: React.FC = () => {
               )}
             </div>
 
-            {/* MOBILE */}
-            <div>
-              <label className="block text-sm font-bold text-slate-800 mb-1">
-                મોબાઇલ નંબર (Mobile) *
-              </label>
-              <input
-                type="tel"
-                maxLength={10}
-                value={mobileNumber}
-                onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
-                className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm ${
-                  errors.mobileNumber ? 'border-red-500' : 'border-slate-300'
-                }`}
-              />
-              {errors.mobileNumber && (
-                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5" /> {errors.mobileNumber}
-                </p>
-              )}
+            {/* MOBILE & EMAIL */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-800 mb-1">
+                  મોબાઇલ નંબર (Mobile) *
+                </label>
+                <input
+                  type="tel"
+                  maxLength={10}
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
+                  className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm ${
+                    errors.mobileNumber ? 'border-red-500' : 'border-slate-300'
+                  }`}
+                />
+                {errors.mobileNumber && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {errors.mobileNumber}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-800 mb-1">
+                  ઈમેઇલ (Email - વૈકલ્પિક)
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="example@baps.org"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 transition"
+                />
+              </div>
             </div>
 
             {/* VILLAGE & XETRA */}
@@ -376,6 +415,62 @@ export const EditVolunteer: React.FC = () => {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* 3 GROUP TILES (BELOW SEVA VIBHAG) */}
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1">
+                <label className="text-sm font-extrabold text-slate-900">
+                  સેવા ગ્રુપ પસંદ કરો (Select Duty Group) *
+                </label>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  તારીખ આપોઆપ સેટ થઈ જશે (કાર્ડ પર છપાશે નહીં, QR કોડમાં રહેશે)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {VOLUNTEER_GROUPS.map((grp) => {
+                  const isSelected = selectedGroupId === grp.id;
+                  return (
+                    <div
+                      key={grp.id}
+                      onClick={() => setSelectedGroupId(grp.id)}
+                      className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between shadow-sm hover:shadow ${
+                        isSelected
+                          ? grp.colorScheme.selectedBg
+                          : 'bg-slate-50 hover:bg-slate-100/90 border-slate-200'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-extrabold text-sm text-slate-900">
+                            {grp.gujaratiName}
+                          </span>
+                          <span
+                            className={`w-4 h-4 rounded-full flex items-center justify-center border transition ${
+                              isSelected
+                                ? 'bg-amber-600 border-amber-600 text-white'
+                                : 'border-slate-300 bg-white'
+                            }`}
+                          >
+                            {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </span>
+                        </div>
+                        <div className="text-[11px] font-semibold text-slate-600">
+                          {grp.name}
+                        </div>
+                      </div>
+
+                      <div className="mt-2.5 pt-2 border-t border-slate-200">
+                        <div className="text-[10px] text-slate-500 font-semibold">સેવા તારીખ ગાળો:</div>
+                        <div className="text-xs font-black text-amber-950 font-mono mt-0.5">
+                          {grp.dateRangeDisplay}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* BUTTONS */}

@@ -35,6 +35,19 @@ export const Login: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Switch tabs and immediately empty all fields
+  const switchTab = (tab: 'login' | 'it_register') => {
+    setActiveTab(tab);
+    setEmail('');
+    setPassword('');
+    setFullName('');
+    setMobileNumber('');
+    setErrorMsg('');
+    setSuccessMsg('');
+    setShowLoginPassword(false);
+    setShowRegisterPassword(false);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -46,6 +59,19 @@ export const Login: React.FC = () => {
       if (error) {
         setErrorMsg(error.message || 'ખોટો ઈમેઇલ અથવા પાસવર્ડ દાખલ કર્યો છે.');
       } else {
+        // Save plain_password & email in admin_profiles so Super Admin can always view their own / admin password
+        if (isSupabaseConfigured) {
+          const { data: userData } = await supabase.auth.getUser();
+          if (userData?.user) {
+            await supabase
+              .from('admin_profiles')
+              .update({
+                plain_password: password,
+                email: email.trim(),
+              })
+              .eq('id', userData.user.id);
+          }
+        }
         navigate('/dashboard');
       }
     } catch (err: any) {
@@ -63,7 +89,11 @@ export const Login: React.FC = () => {
 
     try {
       if (!isSupabaseConfigured) {
-        setErrorMsg('Supabase કનેક્ટેડ નથી.');
+        // Mock fallback
+        setSuccessMsg(
+          'તમારી SSD IT સ્વયંસેવક વિનંતી સફળતાપૂર્વક સુપર એડમિનને મોકલાઈ ગઈ છે! સુપર એડમિન દ્વારા મંજૂરી (Approval) મળ્યા પછી જ તમે લોગિન કરી શકશો.'
+        );
+        switchTab('login');
         setLoading(false);
         return;
       }
@@ -74,48 +104,45 @@ export const Login: React.FC = () => {
         return;
       }
 
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-            role: 'it_volunteer',
-          },
-        },
+      if (!mobileNumber.trim()) {
+        setErrorMsg('કૃપા કરીને તમારો મોબાઇલ નંબર દાખલ કરો.');
+        setLoading(false);
+        return;
+      }
+
+      if (password.length < 6) {
+        setErrorMsg('પાસવર્ડ ઓછામાં ઓછા 6 અક્ષરનો હોવો જોઈએ.');
+        setLoading(false);
+        return;
+      }
+
+      // Call secure database RPC which registers user in auth.users and admin_profiles
+      // with email_confirmed_at = now() - bypassing Supabase email rate limits completely!
+      const { data: rpcRes, error: rpcError } = await supabase.rpc('register_it_volunteer', {
+        p_full_name: fullName.trim(),
+        p_email: email.trim(),
+        p_mobile_number: mobileNumber.trim(),
+        p_password: password,
+        p_status: 'pending',
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Upsert pending profile for IT volunteer including plain_password for Super Admin view
-        const { error: profileError } = await supabase.from('admin_profiles').upsert({
-          id: authData.user.id,
-          full_name: fullName.trim(),
-          email: email.trim(),
-          mobile_number: mobileNumber.trim() || null,
-          plain_password: password,
-          role: 'it_volunteer',
-          status: 'pending',
-        });
-
-        if (profileError) {
-          console.error('Error creating it_volunteer profile:', profileError);
-        }
-
-        // Always sign out so pending user is not automatically logged in
-        await supabase.auth.signOut();
-
-        setSuccessMsg(
-          'તમારી SSD IT સ્વયંસેવક વિનંતી સફળતાપૂર્વક સુપર એડમિનને મોકલાઈ ગઈ છે! સુપર એડમિન દ્વારા મંજૂરી (Approval) મળ્યા પછી જ તમે લોગિન કરી શકશો.'
-        );
-        setActiveTab('login');
-        setPassword('');
+      if (rpcError) {
+        throw rpcError;
       }
+
+      if (rpcRes && !rpcRes.success) {
+        setErrorMsg(rpcRes.message || 'આ ઈમેઇલ પહેલેથી નોંધાયેલ છે.');
+        return;
+      }
+
+      // Always clear fields and switch to login tab with clear instructions
+      switchTab('login');
+      setSuccessMsg(
+        'તમારી SSD IT સ્વયંસેવક વિનંતી સફળતાપૂર્વક સુપર એડમિનને મોકલાઈ ગઈ છે! સુપર એડમિન દ્વારા મંજૂરી (Approval) મળ્યા પછી જ તમે લોગિન કરી શકશો.'
+      );
     } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || 'વિનંતી મોકલવામાં ભૂલ આવી.');
+      console.error('Error during IT volunteer registration:', err);
+      setErrorMsg(err.message || 'વિનંતી મોકલવામાં ભૂલ આવી. કૃપા કરીને ફરી પ્રયાસ કરો.');
     } finally {
       setLoading(false);
     }
@@ -247,10 +274,7 @@ export const Login: React.FC = () => {
             <div className="flex rounded-xl bg-slate-100 p-1 mb-6 border border-slate-200">
               <button
                 type="button"
-                onClick={() => {
-                  setActiveTab('login');
-                  setErrorMsg('');
-                }}
+                onClick={() => switchTab('login')}
                 className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition ${
                   activeTab === 'login'
                     ? 'bg-amber-700 text-white shadow'
@@ -261,10 +285,7 @@ export const Login: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setActiveTab('it_register');
-                  setErrorMsg('');
-                }}
+                onClick={() => switchTab('it_register')}
                 className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5 ${
                   activeTab === 'it_register'
                     ? 'bg-amber-700 text-white shadow'

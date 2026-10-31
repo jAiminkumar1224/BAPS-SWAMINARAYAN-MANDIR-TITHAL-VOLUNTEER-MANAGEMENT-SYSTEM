@@ -57,7 +57,11 @@ export const Login: React.FC = () => {
     try {
       const { error } = await signIn(email.trim(), password);
       if (error) {
-        setErrorMsg(error.message || 'ખોટો ઈમેઇલ અથવા પાસવર્ડ દાખલ કર્યો છે.');
+        const msg =
+          error.message && typeof error.message === 'string' && error.message.trim() !== '{}'
+            ? error.message
+            : 'ખોટો ઈમેઇલ અથવા પાસવર્ડ દાખલ કર્યો છે.';
+        setErrorMsg(msg);
       } else {
         // Save plain_password & email in admin_profiles so Super Admin can always view their own / admin password
         if (isSupabaseConfigured) {

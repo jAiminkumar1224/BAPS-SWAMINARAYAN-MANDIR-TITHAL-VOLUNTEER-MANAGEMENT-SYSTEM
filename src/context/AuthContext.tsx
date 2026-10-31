@@ -158,7 +158,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) {
-      return { error };
+      if (error.message === 'Invalid login credentials') {
+        return { error: new Error('ખોટો ઈમેઇલ અથવા પાસવર્ડ દાખલ કર્યો છે.') };
+      }
+      return { error: new Error(error.message || 'લોગિન કરવામાં ભૂલ આવી.') };
     }
 
     if (data.user) {

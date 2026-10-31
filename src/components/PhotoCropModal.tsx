@@ -23,8 +23,11 @@ export const PhotoCropModal: React.FC<PhotoCropModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const onCropChange = (crop: { x: number; y: number }) => {
     setCrop(crop);
@@ -51,13 +54,13 @@ export const PhotoCropModal: React.FC<PhotoCropModalProps> = ({
     }
   };
 
-  // Start Webcam for Desktop / Live camera
+  // Start Webcam for Desktop / Live camera (using rear/environment camera by default)
   const startWebcam = async () => {
     try {
       setIsCapturingWebcam(true);
       setImageSrc(null);
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
       });
       mediaStreamRef.current = stream;
       if (videoRef.current) {
@@ -66,8 +69,21 @@ export const PhotoCropModal: React.FC<PhotoCropModalProps> = ({
       }
     } catch (err) {
       console.error('Error opening webcam:', err);
-      alert('કેમેરા શરૂ કરવામાં મુશ્કેલી આવી છે. કૃપા કરીને બ્રાઉઝર પરવાનગી તપાસો અથવા ફોટો પસંદ કરો વિકલ્પ વાપરો.');
+      // Fallback to native camera input if getUserMedia fails
+      if (cameraInputRef.current) {
+        cameraInputRef.current.click();
+      } else {
+        alert('કેમેરા શરૂ કરવામાં મુશ્કેલી આવી છે. કૃપા કરીને ફોટો પસંદ કરો વિકલ્પ વાપરો.');
+      }
       setIsCapturingWebcam(false);
+    }
+  };
+
+  const handleCameraClick = () => {
+    if (isMobile && cameraInputRef.current) {
+      cameraInputRef.current.click();
+    } else {
+      startWebcam();
     }
   };
 
@@ -213,10 +229,21 @@ export const PhotoCropModal: React.FC<PhotoCropModalProps> = ({
           {/* Action Choice Buttons when no image is loaded */}
           {!imageSrc && !isCapturingWebcam && (
             <div className="py-8 flex flex-col items-center justify-center gap-4">
+              {/* Gallery / File picker input */}
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/png, image/jpeg, image/jpg, image/webp"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {/* Native Mobile Camera capture input (iOS / Android rear camera) */}
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -236,14 +263,14 @@ export const PhotoCropModal: React.FC<PhotoCropModalProps> = ({
 
                 <button
                   type="button"
-                  onClick={startWebcam}
+                  onClick={handleCameraClick}
                   className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-amber-300 rounded-xl hover:border-amber-600 hover:bg-amber-50/50 transition cursor-pointer text-center group"
                 >
                   <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 mb-3 group-hover:scale-110 transition">
                     <Camera className="w-7 h-7" />
                   </div>
                   <span className="font-bold text-slate-800 text-base">કેમેરાથી ફોટો લો</span>
-                  <span className="text-xs text-slate-500 mt-1">વેબકેમ અથવા મોબાઈલ કેમેરા વાપરો</span>
+                  <span className="text-xs text-slate-500 mt-1">મોબાઈલ કેમેરા અથવા વેબકેમ વાપરો</span>
                 </button>
               </div>
 

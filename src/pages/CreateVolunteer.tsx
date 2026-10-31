@@ -48,9 +48,9 @@ export const CreateVolunteer: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Generate Unique ID on mount: e.g. BAPS-74930-TNL
+  // Generate Unique ID on mount: e.g. BAPS-749302-TNL (6-digit space: 900,000 unique IDs to prevent collisions)
   const generateNewId = () => {
-    const randomNum = Math.floor(10000 + Math.random() * 90000);
+    const randomNum = Math.floor(100000 + Math.random() * 900000);
     return `BAPS-${randomNum}-TNL`;
   };
 
@@ -136,9 +136,10 @@ export const CreateVolunteer: React.FC = () => {
 
       if (photoBlob) {
         if (isSupabaseConfigured) {
-          // Upload to Supabase Storage
+          // Upload to Supabase Storage with collision-safe timestamp and random token
           const fileExt = 'jpg';
-          const fileName = `${volunteerId}_${Date.now()}.${fileExt}`;
+          const randomToken = Math.random().toString(36).substring(2, 7);
+          const fileName = `${volunteerId}_${Date.now()}_${randomToken}.${fileExt}`;
           const filePath = `${fileName}`;
 
           const { error: uploadError } = await supabase.storage
@@ -163,21 +164,37 @@ export const CreateVolunteer: React.FC = () => {
         VOLUNTEER_GROUPS.find((g) => g.id === selectedGroupId) || VOLUNTEER_GROUPS[0];
 
       if (isSupabaseConfigured) {
-        const { error: insertError } = await supabase.from('volunteers').insert({
-          volunteer_id: volunteerId,
-          name: name.trim(),
-          email: email.trim() || null,
-          mobile_number: mobileNumber.trim(),
-          village_name: villageName.trim(),
-          xetra_name: xetraName.trim(),
-          seva_vibhag_id: sevaVibhagId,
-          photo_path: photoPath,
-          group_name: selectedGroup.name,
-          duty_start_date: selectedGroup.startDate,
-          duty_end_date: selectedGroup.endDate,
-        });
+        // High-concurrency safe insertion with retry if random volunteer_id collides
+        let currentId = volunteerId;
+        let attempts = 0;
+        let inserted = false;
 
-        if (insertError) throw insertError;
+        while (!inserted && attempts < 3) {
+          attempts++;
+          const { error: insertError } = await supabase.from('volunteers').insert({
+            volunteer_id: currentId,
+            name: name.trim(),
+            email: email.trim() || null,
+            mobile_number: mobileNumber.trim(),
+            village_name: villageName.trim(),
+            xetra_name: xetraName.trim(),
+            seva_vibhag_id: sevaVibhagId,
+            photo_path: photoPath,
+            group_name: selectedGroup.name,
+            duty_start_date: selectedGroup.startDate,
+            duty_end_date: selectedGroup.endDate,
+          });
+
+          if (!insertError) {
+            inserted = true;
+          } else if (insertError.code === '23505' && attempts < 3) {
+            // Collision caught - generate fresh new ID and retry
+            currentId = generateNewId();
+            setVolunteerId(currentId);
+          } else {
+            throw insertError;
+          }
+        }
       } else {
         // Save in local storage mock list
         const existing = JSON.parse(localStorage.getItem('baps_mock_volunteers') || '[]');

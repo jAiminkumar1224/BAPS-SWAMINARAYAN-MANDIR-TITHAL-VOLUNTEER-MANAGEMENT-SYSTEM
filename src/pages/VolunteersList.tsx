@@ -22,6 +22,7 @@ import {
   CreditCard,
   CheckSquare,
   Square,
+  RefreshCw,
 } from 'lucide-react';
 
 export const VolunteersList: React.FC = () => {
@@ -255,6 +256,17 @@ export const VolunteersList: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={fetchInitialData}
+            disabled={loading}
+            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition border border-slate-300"
+            title="નવો ડેટા રીફ્રેશ કરો"
+          >
+            <RefreshCw className={`w-4 h-4 text-slate-600 ${loading ? 'animate-spin' : ''}`} />
+            <span>રીફ્રેશ</span>
+          </button>
+
           {selectedIds.length > 0 && (
             <button
               onClick={handlePrintBatch}

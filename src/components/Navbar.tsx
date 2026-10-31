@@ -200,7 +200,11 @@ export const Navbar: React.FC = () => {
           <div className="pt-4 border-t border-amber-500/20 flex items-center justify-between">
             <div>
               <span className="text-xs text-amber-300 block">
-                {profile?.role === 'super_admin' ? 'સુપર એડમિન' : 'એડમિન'}
+                {profile?.role === 'super_admin'
+                  ? 'સુપર એડમિન'
+                  : profile?.role === 'it_volunteer'
+                  ? 'SSD IT સ્વયંસેવક'
+                  : 'એડમિન'}
               </span>
               <span className="text-xs font-bold text-white">
                 {profile?.full_name || user?.email}

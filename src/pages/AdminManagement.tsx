@@ -470,11 +470,11 @@ export const AdminManagement: React.FC = () => {
       )}
 
       {/* SYSTEM RULE INFO BANNER */}
-      <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="p-3.5 bg-amber-50/90 rounded-xl border border-amber-200 text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
         <div className="flex items-center gap-2">
           <Crown className="w-4 h-4 text-amber-700 shrink-0" />
           <span>
-            <strong>સિસ્ટમ અધિકાર નિયમ:</strong> સિસ્ટમમાં ફક્ત ૧ જ સુપર એડમિન રહેશે. તમામ વપરાશકર્તા પ્રથમ SSD IT સ્વયંસેવક બને છે, ત્યાર બાદ તેમને એડમિન બનાવી શકાય છે. ડેટા ડિલીટ કરવાનો અધિકાર ફક્ત સુપર એડમિન પાસે છે.
+            <strong>સિસ્ટમ ક્ષમતા અને નિયમ:</strong> 1 સુપર એડમિન, 10 એડમિન્સ અને 20 SSD IT સ્વયંસેવકો એકસાથે પોતપોતાના ડિવાઇસ (iOS / Android / PC) પરથી લોગિન રહીને એકસાથે ફોટા અપલોડ કરી શકે છે અને સ્વયંસેવક ઉમેરી શકે છે. કોઈપણ એક યુઝર લોગઆઉટ કરે તો પણ અન્ય કોઈના લોગિન પર અસર થશે નહીં.
           </span>
         </div>
       </div>
@@ -490,7 +490,7 @@ export const AdminManagement: React.FC = () => {
           }`}
         >
           <Laptop className="w-4 h-4" />
-          <span>SSD IT સ્વયંસેવકો ({approvedItVolunteers.length})</span>
+          <span>SSD IT સ્વયંસેવકો ({approvedItVolunteers.length} / 20)</span>
           {pendingItRequests.length > 0 && (
             <span className="px-2 py-0.5 text-xs font-black bg-red-600 text-white rounded-full shadow animate-pulse">
               {pendingItRequests.length} પેન્ડિંગ
@@ -507,7 +507,7 @@ export const AdminManagement: React.FC = () => {
           }`}
         >
           <Shield className="w-4 h-4" />
-          <span>સિસ્ટમ એડમિન્સ (સુપર એડમિન: 1 | એડમિન: {adminProfiles.length})</span>
+          <span>સિસ્ટમ એડમિન્સ (સુપર એડમિન: 1 | એડમિન્સ: {adminProfiles.length} / 10)</span>
         </button>
       </div>
 

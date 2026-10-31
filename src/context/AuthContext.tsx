@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (data.user) {
       const p = await fetchProfile(data.user.id);
       if (!p) {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: 'local' });
         setUser(null);
         setProfile(null);
         return {
@@ -176,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (p.status === 'pending') {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: 'local' });
         setUser(null);
         setProfile(null);
         return {
@@ -187,7 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (p.status === 'rejected') {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: 'local' });
         setUser(null);
         setProfile(null);
         return {
@@ -207,7 +207,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(null);
       return;
     }
-    await supabase.auth.signOut();
+    // Scope 'local' ensures logging out on this device does NOT affect any other user or device
+    await supabase.auth.signOut({ scope: 'local' });
     setUser(null);
     setProfile(null);
   };

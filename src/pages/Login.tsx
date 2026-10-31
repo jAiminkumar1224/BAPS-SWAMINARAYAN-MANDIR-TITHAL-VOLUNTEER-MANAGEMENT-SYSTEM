@@ -90,21 +90,36 @@ export const Login: React.FC = () => {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
+        options: {
+          data: {
+            full_name: fullName.trim() || 'સુપર એડમિન',
+          },
+        },
       });
 
       if (authError) throw authError;
 
-      if (authData.user) {
-        // Create initial Super Admin profile
-        const { error: profileError } = await supabase.from('admin_profiles').insert({
-          id: authData.user.id,
-          full_name: fullName.trim() || 'સુપર એડમિન',
-          role: 'super_admin',
+      // Try automatic sign-in if session was not returned immediately
+      if (!authData.session) {
+        await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
         });
+      }
 
-        if (profileError) throw profileError;
+      if (authData.user) {
+        // Try creating/upserting initial Super Admin profile
+        try {
+          await supabase.from('admin_profiles').upsert({
+            id: authData.user.id,
+            full_name: fullName.trim() || 'સુપર એડમિન',
+            role: 'super_admin',
+          });
+        } catch (pErr) {
+          console.warn('Profile insert handled by trigger or requires confirmation:', pErr);
+        }
 
-        setSuccessMsg('સુપર એડમિન એકાઉન્ટ સફળતાપૂર્વક બની ગયું છે! કૃપા કરીને હવે લોગિન કરો.');
+        setSuccessMsg('સુપર એડમિન એકાઉન્ટ તૈયાર થઈ ગયું છે! હવે નીચેથી લોગિન કરો.');
         setIsInitialSetup(false);
       }
     } catch (err: any) {

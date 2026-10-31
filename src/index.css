@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-gujarati bg-slate-50 text-slate-900;
+  }
+}
+
+/* Precise Print Media Rules for 74mm x 100mm ID Cards */
+@media print {
+  @page {
+    size: 74mm 100mm;
+    margin: 0mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide navigation, buttons, and footers during card printing */
+  nav, footer, button, .no-print {
+    display: none !important;
+  }
+}

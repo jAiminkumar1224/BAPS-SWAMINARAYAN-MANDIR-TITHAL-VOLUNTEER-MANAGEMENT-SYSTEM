@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { Volunteer, SevaVibhag } from '../types';
+import { KSHETRA_LIST } from '../constants/kshetra';
 import { IdCard } from '../components/IdCard';
 import { downloadCardAsPdf, downloadCardAsPng, printCard } from '../utils/exportCard';
 import {
@@ -211,7 +212,9 @@ export const VolunteersList: React.FC = () => {
 
   // Extract unique villages and xetras for filter dropdowns
   const uniqueVillages = Array.from(new Set(volunteers.map((v) => v.village_name))).filter(Boolean);
-  const uniqueXetras = Array.from(new Set(volunteers.map((v) => v.xetra_name))).filter(Boolean);
+  const uniqueXetras = Array.from(
+    new Set([...KSHETRA_LIST, ...volunteers.map((v) => v.xetra_name)])
+  ).filter(Boolean);
 
   // Pagination calculation
   const totalPages = Math.ceil(filteredVolunteers.length / pageSize) || 1;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { SevaVibhag, Volunteer } from '../types';
+import { KSHETRA_LIST } from '../constants/kshetra';
 import { IdCard } from '../components/IdCard';
 import { PhotoCropModal } from '../components/PhotoCropModal';
 import { downloadCardAsPdf, downloadCardAsPng, printCard } from '../utils/exportCard';
@@ -345,14 +346,24 @@ export const EditVolunteer: React.FC = () => {
                 <label className="block text-sm font-bold text-slate-800 mb-1">
                   ક્ષેત્ર (Kshetra) *
                 </label>
-                <input
-                  type="text"
+                <select
                   value={xetraName}
                   onChange={(e) => setXetraName(e.target.value)}
-                  className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm ${
+                  className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-medium text-slate-800 ${
                     errors.xetraName ? 'border-red-500' : 'border-slate-300'
                   }`}
-                />
+                >
+                  <option value="">-- ક્ષેત્ર પસંદ કરો --</option>
+                  {KSHETRA_LIST.map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                  {/* If existing volunteer had a custom/old Kshetra not in the 19 list, still preserve it */}
+                  {xetraName && !KSHETRA_LIST.includes(xetraName as any) && (
+                    <option value={xetraName}>{xetraName}</option>
+                  )}
+                </select>
               </div>
             </div>
 

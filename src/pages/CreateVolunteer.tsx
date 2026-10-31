@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { SevaVibhag } from '../types';
+import { KSHETRA_LIST } from '../constants/kshetra';
 import { IdCard } from '../components/IdCard';
 import { PhotoCropModal } from '../components/PhotoCropModal';
 import { downloadCardAsPdf, downloadCardAsPng, printCard } from '../utils/exportCard';
@@ -346,15 +347,20 @@ export const CreateVolunteer: React.FC = () => {
                 <label className="block text-sm font-bold text-slate-800 mb-1">
                   ક્ષેત્ર (Kshetra) *
                 </label>
-                <input
-                  type="text"
+                <select
                   value={xetraName}
                   onChange={(e) => setXetraName(e.target.value)}
-                  placeholder="દા.ત. મરલા / તિથલ"
-                  className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 transition ${
+                  className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 transition font-medium text-slate-800 ${
                     errors.xetraName ? 'border-red-500 bg-red-50/30' : 'border-slate-300'
                   }`}
-                />
+                >
+                  <option value="">-- ક્ષેત્ર પસંદ કરો --</option>
+                  {KSHETRA_LIST.map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
                 {errors.xetraName && (
                   <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5" /> {errors.xetraName}

@@ -23,7 +23,10 @@ export interface Volunteer {
 export interface AdminProfile {
   id: string;
   full_name: string;
-  role: 'super_admin' | 'admin';
+  role: 'super_admin' | 'admin' | 'it_volunteer';
+  status: 'pending' | 'approved' | 'rejected';
+  email?: string | null;
+  mobile_number?: string | null;
   created_at: string;
 }
 

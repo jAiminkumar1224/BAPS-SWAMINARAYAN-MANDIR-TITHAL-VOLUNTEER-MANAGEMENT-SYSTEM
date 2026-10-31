@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { Volunteer, SevaVibhag } from '../types';
 import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
+import { useAuth } from '../context/AuthContext';
 import {
   CreditCard,
   Users,
@@ -12,11 +13,15 @@ import {
   Calendar,
   ChevronRight,
   TrendingUp,
+  Camera,
+  Bell,
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
+  const { profile, isSuperAdmin, isItVolunteer } = useAuth();
   const [totalVolunteers, setTotalVolunteers] = useState(0);
   const [totalDepartments, setTotalDepartments] = useState(0);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [recentVolunteers, setRecentVolunteers] = useState<Volunteer[]>([]);
   const [departments, setDepartments] = useState<SevaVibhag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,6 +96,16 @@ export const Dashboard: React.FC = () => {
         .limit(6);
 
       setRecentVolunteers((recentData as unknown as Volunteer[]) || []);
+
+      // 4. If super admin, fetch pending IT requests count
+      if (isSuperAdmin) {
+        const { count: pendingCount } = await supabase
+          .from('admin_profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'it_volunteer')
+          .eq('status', 'pending');
+        setPendingRequestsCount(pendingCount || 0);
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
@@ -100,6 +115,58 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* SUPER ADMIN NOTIFICATION BANNER FOR PENDING IT REQUESTS */}
+      {isSuperAdmin && pendingRequestsCount > 0 && (
+        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 rounded-2xl p-5 text-slate-950 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border-2 border-amber-300 animate-pulse">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 bg-white/30 rounded-2xl flex items-center justify-center font-bold text-xl shadow-inner shrink-0 text-white">
+              <Bell className="w-6 h-6 text-slate-950" />
+            </div>
+            <div>
+              <h3 className="font-black text-base sm:text-lg text-slate-950">
+                🔔 {pendingRequestsCount} નવી SSD IT સ્વયંસેવક એક્સેસ વિનંતી(ઓ) પેન્ડિંગ છે!
+              </h3>
+              <p className="text-xs sm:text-sm font-semibold text-slate-900/90">
+                નવા IT સ્વયંસેવકોએ લોગિન માટે વિનંતી કરી છે. કૃપા કરીને તેમને મંજૂર (Approve) કરો જેથી તેઓ પોર્ટલમાં ફોટો પાડીને સ્વયંસેવક ઉમેરી શકે.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/admins"
+            className="px-5 py-2.5 bg-slate-950 hover:bg-black text-amber-300 font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition shrink-0 flex items-center gap-2"
+          >
+            <span>વિનંતીઓ જુઓ અને મંજૂર કરો</span>
+            <ChevronRight className="w-4 h-4 text-amber-300" />
+          </Link>
+        </div>
+      )}
+
+      {/* IT VOLUNTEER BANNER */}
+      {isItVolunteer && (
+        <div className="bg-gradient-to-r from-blue-700 via-indigo-800 to-blue-900 rounded-2xl p-5 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-blue-400/40">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+              <Camera className="w-6 h-6 text-amber-300" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-base text-amber-100">
+                SSD IT સ્વયંસેવક પોર્ટલ
+              </h3>
+              <p className="text-xs text-blue-100 mt-0.5">
+                તમે કેમેરાથી સ્વયંસેવકનો ફોટો પાડીને નવી વિગતો ડેટાબેઝમાં સેવ કરી શકો છો.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/create"
+            className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-md transition shrink-0 flex items-center gap-2"
+          >
+            <Camera className="w-4 h-4" />
+            <span>નવો ફોટો પાડો અને સેવ કરો</span>
+          </Link>
+        </div>
+      )}
+
       {/* Top Welcome Banner */}
       <div className="bg-gradient-to-r from-[#7F1D1D] via-[#991B1B] to-[#7F1D1D] rounded-2xl p-6 sm:p-8 text-white shadow-xl border-2 border-[#C59B27] relative overflow-hidden">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-cover bg-center opacity-10 pointer-events-none" style={{ backgroundImage: `url('/mandir.jpeg')` }} />
@@ -175,26 +242,45 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 3: Total Seva Vibhag */}
-        <div className="bg-white rounded-xl p-6 shadow-md border-t-4 border-emerald-600 border-x border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              કુલ સેવા વિભાગ
-            </p>
-            <h3 className="text-3xl font-black text-slate-900 mt-1">
-              {loading ? '...' : totalDepartments}
-            </h3>
-            <Link
-              to="/departments"
-              className="text-xs text-emerald-700 hover:underline font-semibold inline-flex items-center gap-1 mt-1"
-            >
-              સેવા વિભાગ વ્યવસ્થાપન &rarr;
-            </Link>
+        {/* Card 3: Total Seva Vibhag (Hidden for IT volunteer) */}
+        {!isItVolunteer ? (
+          <div className="bg-white rounded-xl p-6 shadow-md border-t-4 border-emerald-600 border-x border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                કુલ સેવા વિભાગ
+              </p>
+              <h3 className="text-3xl font-black text-slate-900 mt-1">
+                {loading ? '...' : totalDepartments}
+              </h3>
+              <Link
+                to="/departments"
+                className="text-xs text-emerald-700 hover:underline font-semibold inline-flex items-center gap-1 mt-1"
+              >
+                સેવા વિભાગ વ્યવસ્થાપન &rarr;
+              </Link>
+            </div>
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-sm">
+              <Layers className="w-7 h-7" />
+            </div>
           </div>
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-sm">
-            <Layers className="w-7 h-7" />
+        ) : (
+          <div className="bg-white rounded-xl p-6 shadow-md border-t-4 border-purple-600 border-x border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                તમારો રોલ
+              </p>
+              <h3 className="text-xl font-black text-purple-900 mt-1">
+                SSD IT સ્વયંસેવક
+              </h3>
+              <span className="text-xs text-purple-700 font-medium block mt-1">
+                કેમેરા અને ડેટા એન્ટ્રી એક્સેસ
+              </span>
+            </div>
+            <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center border border-purple-200 shadow-sm">
+              <Camera className="w-7 h-7" />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* RECENT ID CARDS SECTION */}

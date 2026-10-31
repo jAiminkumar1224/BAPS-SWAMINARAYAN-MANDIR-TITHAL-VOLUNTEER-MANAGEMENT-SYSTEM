@@ -13,7 +13,7 @@ import { VerifyVolunteer } from './pages/VerifyVolunteer';
 
 // Protected Layout wrapping all authenticated admin pages
 const ProtectedLayout: React.FC = () => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isApproved, loading } = useAuth();
 
   if (loading) {
     return (
@@ -26,7 +26,7 @@ const ProtectedLayout: React.FC = () => {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || !isApproved) {
     return <Navigate to="/login" replace />;
   }
 
@@ -41,6 +41,24 @@ const ProtectedLayout: React.FC = () => {
       </footer>
     </div>
   );
+};
+
+// Route guard for pages restricted from IT volunteers
+const AdminOnlyRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { isItVolunteer } = useAuth();
+  if (isItVolunteer) {
+    return <Navigate to="/create" replace />;
+  }
+  return children;
+};
+
+// Route guard for Super Admin only pages
+const SuperAdminOnlyRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { isSuperAdmin } = useAuth();
+  if (!isSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
 };
 
 export const App: React.FC = () => {
@@ -61,8 +79,22 @@ export const App: React.FC = () => {
             <Route path="/create" element={<CreateVolunteer />} />
             <Route path="/volunteers" element={<VolunteersList />} />
             <Route path="/volunteers/edit/:id" element={<EditVolunteer />} />
-            <Route path="/departments" element={<SevaVibhagManagement />} />
-            <Route path="/admins" element={<AdminManagement />} />
+            <Route
+              path="/departments"
+              element={
+                <AdminOnlyRoute>
+                  <SevaVibhagManagement />
+                </AdminOnlyRoute>
+              }
+            />
+            <Route
+              path="/admins"
+              element={
+                <SuperAdminOnlyRoute>
+                  <AdminManagement />
+                </SuperAdminOnlyRoute>
+              }
+            />
           </Route>
 
           {/* Fallback */}

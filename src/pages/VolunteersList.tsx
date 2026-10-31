@@ -5,6 +5,7 @@ import { Volunteer, SevaVibhag } from '../types';
 import { KSHETRA_LIST } from '../constants/kshetra';
 import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
 import { IdCard } from '../components/IdCard';
+import { useAuth } from '../context/AuthContext';
 import { downloadCardAsPdf, downloadCardAsPng, printCard } from '../utils/exportCard';
 import {
   Search,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 
 export const VolunteersList: React.FC = () => {
+  const { isItVolunteer } = useAuth();
   const [searchParams] = useSearchParams();
   const previewModalCardRef = useRef<HTMLDivElement>(null);
 
@@ -147,6 +149,11 @@ export const VolunteersList: React.FC = () => {
   };
 
   const handleDelete = async () => {
+    if (isItVolunteer) {
+      alert('SSD IT સ્વયંસેવક પાસે સ્વયંસેવક ડિલીટ કરવાની પરવાનગી નથી.');
+      setDeletingVolunteer(null);
+      return;
+    }
     if (!deletingVolunteer) return;
     setIsDeleting(true);
 
@@ -463,13 +470,15 @@ export const VolunteersList: React.FC = () => {
                             <Edit className="w-4 h-4" />
                           </Link>
 
-                          <button
-                            onClick={() => setDeletingVolunteer(vol)}
-                            title="ડિલીટ કરો"
-                            className="p-1.5 rounded-lg text-rose-700 hover:bg-rose-100 transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {!isItVolunteer && (
+                            <button
+                              onClick={() => setDeletingVolunteer(vol)}
+                              title="ડિલીટ કરો"
+                              className="p-1.5 rounded-lg text-rose-700 hover:bg-rose-100 transition"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

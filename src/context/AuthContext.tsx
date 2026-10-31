@@ -9,6 +9,8 @@ interface AuthContextType {
   profile: AdminProfile | null;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isItVolunteer: boolean;
+  isApproved: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -24,16 +26,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string): Promise<AdminProfile | null> => {
     if (!isSupabaseConfigured) {
       // Local fallback profile
-      setProfile({
+      const p: AdminProfile = {
         id: userId,
         full_name: 'BAPS Tithal Admin',
         role: 'super_admin',
+        status: 'approved',
         created_at: new Date().toISOString(),
-      });
-      return;
+      };
+      setProfile(p);
+      return p;
     }
 
     try {
@@ -44,7 +48,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (!error && data) {
-        setProfile(data as AdminProfile);
+        const p = data as AdminProfile;
+        setProfile(p);
+        return p;
       } else {
         // If profile doesn't exist, check if table is empty to assign super_admin
         const { count } = await supabase
@@ -56,17 +62,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: userId,
             full_name: 'Super Admin (Tithal)',
             role: 'super_admin',
+            status: 'approved',
             created_at: new Date().toISOString(),
           };
           await supabase.from('admin_profiles').insert(newProfile);
           setProfile(newProfile);
+          return newProfile;
         } else {
           setProfile(null);
+          return null;
         }
       }
     } catch (err) {
       console.error('Error fetching admin profile:', err);
       setProfile(null);
+      return null;
     }
   };
 
@@ -82,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: parsed.id,
             full_name: 'BAPS Tithal Admin',
             role: 'super_admin',
+            status: 'approved',
             created_at: new Date().toISOString(),
           });
         } catch {
@@ -135,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: mockUser.id,
         full_name: 'BAPS Tithal Admin',
         role: 'super_admin',
+        status: 'approved',
         created_at: new Date().toISOString(),
       });
       return { error: null };
@@ -145,10 +157,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
     });
 
-    if (!error && data.user) {
-      await fetchProfile(data.user.id);
+    if (error) {
+      return { error };
     }
-    return { error };
+
+    if (data.user) {
+      const p = await fetchProfile(data.user.id);
+      if (!p) {
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        return {
+          error: new Error('તમારી પ્રોફાઇલ મળી નથી. કૃપા કરીને સુપર એડમિનનો સંપર્ક કરો.'),
+        };
+      }
+
+      if (p.status === 'pending') {
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        return {
+          error: new Error(
+            'તમારી SSD IT સ્વયંસેવક એક્સેસ વિનંતી હજુ પેન્ડિંગ છે. સુપર એડમિન દ્વારા મંજૂર (Approve) કર્યા પછી જ તમે લોગિન કરી શકશો.'
+          ),
+        };
+      }
+
+      if (p.status === 'rejected') {
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        return {
+          error: new Error(
+            'તમારી એક્સેસ વિનંતી નામંજૂર કરવામાં આવી છે. કૃપા કરીને સુપર એડમિનનો સંપર્ક કરો.'
+          ),
+        };
+      }
+    }
+    return { error: null };
   };
 
   const signOut = async () => {
@@ -180,8 +226,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const isAdmin = Boolean(profile && (profile.role === 'admin' || profile.role === 'super_admin'));
-  const isSuperAdmin = Boolean(profile && profile.role === 'super_admin');
+  const isApproved = Boolean(profile && profile.status === 'approved');
+  const isAdmin = Boolean(isApproved && (profile?.role === 'admin' || profile?.role === 'super_admin'));
+  const isSuperAdmin = Boolean(isApproved && profile?.role === 'super_admin');
+  const isItVolunteer = Boolean(isApproved && profile?.role === 'it_volunteer');
 
   return (
     <AuthContext.Provider
@@ -191,6 +239,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile,
         isAdmin,
         isSuperAdmin,
+        isItVolunteer,
+        isApproved,
         loading,
         signIn,
         signOut,

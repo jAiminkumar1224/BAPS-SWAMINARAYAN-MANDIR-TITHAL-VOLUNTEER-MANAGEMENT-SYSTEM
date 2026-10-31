@@ -2,15 +2,29 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { isSupabaseConfigured, supabase } from '../lib/supabase';
-import { Lock, Mail, ShieldAlert, KeyRound, CheckCircle2 } from 'lucide-react';
+import {
+  Lock,
+  Mail,
+  ShieldAlert,
+  KeyRound,
+  CheckCircle2,
+  User,
+  Phone,
+  Laptop,
+  ArrowRight,
+  Clock,
+  Sparkles,
+} from 'lucide-react';
 
 export const Login: React.FC = () => {
   const { signIn, resetPassword } = useAuth();
   const navigate = useNavigate();
 
+  const [activeTab, setActiveTab] = useState<'login' | 'it_register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isInitialSetup, setIsInitialSetup] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,12 +40,77 @@ export const Login: React.FC = () => {
     try {
       const { error } = await signIn(email.trim(), password);
       if (error) {
-        setErrorMsg('ખોટો ઈમેઇલ અથવા પાસવર્ડ દાખલ કર્યો છે.');
+        setErrorMsg(error.message || 'ખોટો ઈમેઇલ અથવા પાસવર્ડ દાખલ કર્યો છે.');
       } else {
         navigate('/dashboard');
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'લોગિન કરવામાં ભૂલ આવી.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleItRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    setLoading(true);
+
+    try {
+      if (!isSupabaseConfigured) {
+        setErrorMsg('Supabase કનેક્ટેડ નથી.');
+        setLoading(false);
+        return;
+      }
+
+      if (!fullName.trim()) {
+        setErrorMsg('કૃપા કરીને તમારું પૂરું નામ દાખલ કરો.');
+        setLoading(false);
+        return;
+      }
+
+      // Create user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim(),
+            role: 'it_volunteer',
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // Upsert pending profile for IT volunteer
+        const { error: profileError } = await supabase.from('admin_profiles').upsert({
+          id: authData.user.id,
+          full_name: fullName.trim(),
+          email: email.trim(),
+          mobile_number: mobileNumber.trim() || null,
+          role: 'it_volunteer',
+          status: 'pending',
+        });
+
+        if (profileError) {
+          console.error('Error creating it_volunteer profile:', profileError);
+        }
+
+        // Always sign out so pending user is not automatically logged in
+        await supabase.auth.signOut();
+
+        setSuccessMsg(
+          'તમારી SSD IT સ્વયંસેવક વિનંતી સફળતાપૂર્વક સુપર એડમિનને મોકલાઈ ગઈ છે! સુપર એડમિન દ્વારા મંજૂરી (Approval) મળ્યા પછી જ તમે લોગિન કરી શકશો.'
+        );
+        setActiveTab('login');
+        setPassword('');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'વિનંતી મોકલવામાં ભૂલ આવી.');
     } finally {
       setLoading(false);
     }
@@ -69,12 +148,11 @@ export const Login: React.FC = () => {
 
     try {
       if (!isSupabaseConfigured) {
-        setErrorMsg('Supabase કનેક્ટેડ નથી. કૃપા કરીને પહેલા .env ફાઇલમાં Supabase પ્રોજેક્ટ કનેક્ટ કરો.');
+        setErrorMsg('Supabase કનેક્ટેડ નથી.');
         setLoading(false);
         return;
       }
 
-      // Check if any admin already exists
       const { count } = await supabase
         .from('admin_profiles')
         .select('*', { count: 'exact', head: true });
@@ -86,7 +164,6 @@ export const Login: React.FC = () => {
         return;
       }
 
-      // Create initial user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -99,7 +176,6 @@ export const Login: React.FC = () => {
 
       if (authError) throw authError;
 
-      // Try automatic sign-in if session was not returned immediately
       if (!authData.session) {
         await supabase.auth.signInWithPassword({
           email: email.trim(),
@@ -108,18 +184,14 @@ export const Login: React.FC = () => {
       }
 
       if (authData.user) {
-        // Try creating/upserting initial Super Admin profile
-        try {
-          await supabase.from('admin_profiles').upsert({
-            id: authData.user.id,
-            full_name: fullName.trim() || 'સુપર એડમિન',
-            role: 'super_admin',
-          });
-        } catch (pErr) {
-          console.warn('Profile insert handled by trigger or requires confirmation:', pErr);
-        }
+        await supabase.from('admin_profiles').upsert({
+          id: authData.user.id,
+          full_name: fullName.trim() || 'સુપર એડમિન',
+          role: 'super_admin',
+          status: 'approved',
+        });
 
-        setSuccessMsg('સુપર એડમિન એકાઉન્ટ તૈયાર થઈ ગયું છે! હવે નીચેથી લોગિન કરો.');
+        setSuccessMsg('સુપર એડમિન એકાઉન્ટ તૈયાર થઈ ગયું છે! હવે લોગિન કરો.');
         setIsInitialSetup(false);
       }
     } catch (err: any) {
@@ -152,20 +224,56 @@ export const Login: React.FC = () => {
         {/* Content Area */}
         <div className="p-6 sm:p-8">
           {errorMsg && (
-            <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-600 text-red-700 text-sm rounded flex items-center gap-2">
+            <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-600 text-red-700 text-xs sm:text-sm rounded flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 flex-shrink-0 text-red-600" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-4 p-3 bg-emerald-50 border-l-4 border-emerald-600 text-emerald-700 text-sm rounded flex items-center gap-2">
+            <div className="mb-4 p-3 bg-emerald-50 border-l-4 border-emerald-600 text-emerald-800 text-xs sm:text-sm rounded flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
               <span>{successMsg}</span>
             </div>
           )}
 
+          {/* TAB SELECTOR: Login vs SSD IT Svayamsevak Request */}
           {!isForgotPassword && !isInitialSetup && (
+            <div className="flex rounded-xl bg-slate-100 p-1 mb-6 border border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('login');
+                  setErrorMsg('');
+                }}
+                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition ${
+                  activeTab === 'login'
+                    ? 'bg-amber-700 text-white shadow'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                લોગિન (Login)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('it_register');
+                  setErrorMsg('');
+                }}
+                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5 ${
+                  activeTab === 'it_register'
+                    ? 'bg-amber-700 text-white shadow'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Laptop className="w-3.5 h-3.5" />
+                <span>SSD IT સ્વયંસેવક</span>
+              </button>
+            </div>
+          )}
+
+          {/* VIEW 1: STANDARD LOGIN FORM */}
+          {!isForgotPassword && !isInitialSetup && activeTab === 'login' && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">
@@ -234,7 +342,118 @@ export const Login: React.FC = () => {
             </form>
           )}
 
-          {/* Forgot Password View */}
+          {/* VIEW 2: SSD IT SVAYAMSEVAK REGISTRATION / ACCESS REQUEST */}
+          {!isForgotPassword && !isInitialSetup && activeTab === 'it_register' && (
+            <form onSubmit={handleItRegister} className="space-y-4">
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-300 text-xs text-amber-950 space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                  <Clock className="w-4 h-4 text-amber-700" />
+                  <span>SSD IT સ્વયંસેવક નોંધણી સૂચના:</span>
+                </div>
+                <p>
+                  અહીંથી વિનંતી મોકલ્યા બાદ તમારી વિનંતી <strong>સુપર એડમિન</strong> પાસે જશે. સુપર એડમિન મંજૂર કરશે ત્યાર બાદ જ તમે લોગિન કરી શકશો.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  સ્વયંસેવકનું પૂરું નામ (Full Name) *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="દા.ત. અક્ષય પટેલ"
+                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-600 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  મોબાઇલ નંબર (Mobile Number) *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Phone className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    maxLength={10}
+                    value={mobileNumber}
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                    placeholder="દા.ત. 9876543210"
+                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-600 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  ઈમેઇલ (Email) *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="તમારો ઈમેઇલ દાખલ કરો"
+                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-600 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  પાસવર્ડ (Password - ઓછામાં ઓછા 6 અક્ષર) *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-600 text-sm"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-700 via-emerald-800 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 text-white font-extrabold rounded-lg shadow-md transition duration-150 flex items-center justify-center gap-2 text-base disabled:opacity-60"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    વિનંતી મોકલાઈ રહી છે...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5 text-amber-300" />
+                    SSD IT સ્વયંસેવક વિનંતી મોકલો
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* VIEW 3: FORGOT PASSWORD */}
           {isForgotPassword && (
             <form onSubmit={handleForgotPassword} className="space-y-4">
               <div>
@@ -275,7 +494,7 @@ export const Login: React.FC = () => {
             </form>
           )}
 
-          {/* Initial Super Admin Setup View */}
+          {/* VIEW 4: INITIAL SUPER ADMIN SETUP */}
           {isInitialSetup && (
             <form onSubmit={handleInitialSetup} className="space-y-4">
               <div className="p-3 bg-amber-50 rounded-lg border border-amber-300 text-xs text-amber-900 mb-3">
@@ -345,7 +564,7 @@ export const Login: React.FC = () => {
           )}
 
           {/* Initial Super Admin Link Toggle */}
-          {!isForgotPassword && !isInitialSetup && (
+          {!isForgotPassword && !isInitialSetup && activeTab === 'login' && (
             <div className="mt-6 pt-4 border-t border-slate-200 text-center">
               <button
                 type="button"

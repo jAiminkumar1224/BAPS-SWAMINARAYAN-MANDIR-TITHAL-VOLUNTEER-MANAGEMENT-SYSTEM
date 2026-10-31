@@ -146,7 +146,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           style={{
             top: '72.10%',
             left: '19.5%',
-            width: '52.0%',
+            width: '53.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -164,7 +164,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           style={{
             top: '75.20%',
             left: '19.5%',
-            width: '52.0%',
+            width: '53.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -185,7 +185,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           style={{
             top: '78.30%',
             left: '19.5%',
-            width: '52.0%',
+            width: '53.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -203,7 +203,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           style={{
             top: '81.30%',
             left: '19.5%',
-            width: '52.0%',
+            width: '53.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -221,7 +221,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           style={{
             top: '84.50%',
             left: '19.5%',
-            width: '52.0%',
+            width: '53.0%',
             transform: 'translateY(-50%)',
           }}
         >
@@ -233,19 +233,20 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </span>
         </div>
 
-        {/* 4. DYNAMIC QR CODE CONTAINER (MOVED ~2.6mm LEFT SO IT DOES NOT TOUCH RIGHT BORDER) */}
-        {/* Center: X: 82.0%, Y: 78.0%, Width: 16.5%, Height: 13.5% */}
+        {/* 4. DYNAMIC QR CODE CONTAINER (100% SEAMLESS ACCURATE OVERLAP OF BEHIND QR CODE) */}
+        {/* Exact template QR box bounds: Left 577px to 704px, Top 734px to 866px */}
+        {/* Center: X: 84.72%, Y: 78.12%, Width: 16.6%, Height: 13.0%, rounded-xl */}
         <div
-          className="absolute z-10 flex items-center justify-center p-1 bg-white rounded-lg shadow-sm"
+          className="absolute z-10 flex items-center justify-center p-1.5 bg-white rounded-xl shadow-sm pointer-events-none"
           style={{
-            top: '78.0%',
-            left: '82.0%',
-            width: '16.5%',
-            height: '13.5%',
+            top: '78.12%',
+            left: '84.72%',
+            width: '16.6%',
+            height: '13.0%',
             transform: 'translate(-50%, -50%)',
           }}
         >
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-white">
             <QRCodeSVG
               value={verificationUrl}
               size={120}

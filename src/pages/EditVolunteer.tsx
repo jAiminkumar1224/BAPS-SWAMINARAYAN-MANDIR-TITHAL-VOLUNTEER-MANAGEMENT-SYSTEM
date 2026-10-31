@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { SevaVibhag, Volunteer } from '../types';
 import { KSHETRA_LIST } from '../constants/kshetra';
+import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
 import { IdCard } from '../components/IdCard';
 import { PhotoCropModal } from '../components/PhotoCropModal';
 import { downloadCardAsPdf, downloadCardAsPng, printCard } from '../utils/exportCard';
@@ -60,15 +61,7 @@ export const EditVolunteer: React.FC = () => {
           setSelectedDeptName(found.seva_vibhag?.name || 'સ્વયંસેવક દળ');
           setPhotoPreviewUrl(found.photo_path);
         }
-        setDepartments([
-          { id: '1', name: 'સ્વયંસેવક દળ', is_active: true },
-          { id: '2', name: 'પાર્કિંગ સેવા', is_active: true },
-          { id: '3', name: 'ભોજન સેવા', is_active: true },
-          { id: '4', name: 'ઉતારા સેવા', is_active: true },
-          { id: '5', name: 'વ્યવસ્થા સેવા', is_active: true },
-          { id: '6', name: 'સ્વાગત સેવા', is_active: true },
-          { id: '7', name: 'મહિલા સેવા', is_active: true },
-        ]);
+        setDepartments(DEFAULT_MOCK_SEVA_VIBHAGS);
         setLoading(false);
         return;
       }

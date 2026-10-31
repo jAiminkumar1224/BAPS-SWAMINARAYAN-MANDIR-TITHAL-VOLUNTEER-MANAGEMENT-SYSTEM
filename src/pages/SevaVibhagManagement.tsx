@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { SevaVibhag } from '../types';
+import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
 import {
   Layers,
   Plus,
@@ -43,18 +44,7 @@ export const SevaVibhagManagement: React.FC = () => {
         const saved = localStorage.getItem('baps_mock_depts');
         const list: SevaVibhag[] = saved
           ? JSON.parse(saved)
-          : [
-              { id: '1', name: 'સ્વયંસેવક દળ', is_active: true },
-              { id: '2', name: 'પાર્કિંગ સેવા', is_active: true },
-              { id: '3', name: 'ભોજન સેવા', is_active: true },
-              { id: '4', name: 'ઉતારા સેવા', is_active: true },
-              { id: '5', name: 'વ્યવસ્થા સેવા', is_active: true },
-              { id: '6', name: 'સ્વાગત સેવા', is_active: true },
-              { id: '7', name: 'મહિલા સેવા', is_active: true },
-              { id: '8', name: 'સભા સંચાલન', is_active: true },
-              { id: '9', name: 'ડેકોરેશન વિભાગ', is_active: true },
-              { id: '10', name: 'રસોડા વિભાગ', is_active: true },
-            ];
+          : DEFAULT_MOCK_SEVA_VIBHAGS;
         setDepartments(list);
         setVolunteerCounts({ '1': 1, '2': 1, '3': 1 });
         setLoading(false);

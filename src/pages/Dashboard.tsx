@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { Volunteer, SevaVibhag } from '../types';
+import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
 import {
   CreditCard,
   Users,
@@ -60,7 +61,7 @@ export const Dashboard: React.FC = () => {
             ];
 
         setTotalVolunteers(mockVolunteers.length);
-        setTotalDepartments(7);
+        setTotalDepartments(DEFAULT_MOCK_SEVA_VIBHAGS.length);
         setRecentVolunteers(mockVolunteers);
         setLoading(false);
         return;

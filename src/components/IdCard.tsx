@@ -37,21 +37,21 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
     const cleanVolunteerId = (volunteerId || 'BAPS-74930-TNL').trim();
     const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify/${cleanVolunteerId}`;
 
-    // Auto font size for Seva Vibhag inside the White Text Box (with safe clearance for upper matras)
-    const getVibhagFontSize = (text: string) => {
-      const len = text ? text.length : 0;
-      if (len > 24) return 'text-[11.5px] sm:text-[13px]';
-      if (len > 18) return 'text-[13px] sm:text-[15px]';
-      if (len > 12) return 'text-[15px] sm:text-[17px]';
-      return 'text-[17px] sm:text-[19.5px]';
-    };
-
-    // Auto font size for Volunteer Name
+    // Auto font size for Volunteer Name inside the prominent White Box below photo
     const getNameFontSize = (text: string) => {
       const len = text ? text.length : 0;
-      if (len > 28) return 'text-[10px] sm:text-[11.5px]';
-      if (len > 20) return 'text-[11px] sm:text-[12.5px]';
-      return 'text-[12px] sm:text-[13.5px]';
+      if (len > 24) return 'text-[13px] sm:text-[15.5px]';
+      if (len > 18) return 'text-[15px] sm:text-[18px]';
+      if (len > 12) return 'text-[17px] sm:text-[20.5px]';
+      return 'text-[19px] sm:text-[23px]';
+    };
+
+    // Auto font size for Seva Vibhag at the bottom (replacing the quote)
+    const getVibhagFontSize = (text: string) => {
+      const len = text ? text.length : 0;
+      if (len > 24) return 'text-[13px] sm:text-[15px]';
+      if (len > 18) return 'text-[15px] sm:text-[17.5px]';
+      return 'text-[17px] sm:text-[20px]';
     };
 
     return (
@@ -113,8 +113,8 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </div>
         </div>
 
-        {/* 2. DYNAMIC SEVA VIBHAG IN WHITE TEXT BOX */}
-        {/* Optical center: X: 50.0%, Y: 65.30%, Width: 88.0%, Height: 6.5%, overflow-visible prevents any vowel clipping */}
+        {/* 2. VOLUNTEER NAME (IN THE PROMINENT WHITE BOX BELOW PHOTO) */}
+        {/* Optical center: X: 50.0%, Y: 65.30%, Width: 88.0%, Height: 6.5%, overflow-visible prevents clipping */}
         <div
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
@@ -126,85 +126,61 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           }}
         >
           <span
-            className={`font-black tracking-wide text-[#0C3260] text-center leading-[1.15] whitespace-nowrap overflow-visible ${getVibhagFontSize(
-              sevaVibhagName || 'સ્વયંસેવક દળ'
+            className={`font-black tracking-wide text-[#0C3260] text-center leading-[1.15] whitespace-nowrap overflow-visible ${getNameFontSize(
+              name || 'સ્વયંસેવક'
             )}`}
             style={{
               fontFamily: "'Noto Sans Gujarati', sans-serif",
             }}
+            title={name}
           >
-            {sevaVibhagName || 'સ્વયંસેવક દળ'}
+            {name || 'સ્વયંસેવક'}
           </span>
         </div>
 
-        {/* 3. DYNAMIC DETAILS NAVY BOX (HEIGHT INCREASED & BALANCED FROM TOP & BOTTOM) */}
-        {/* Bounds: Left: 5.5%, Top: 68.2%, Width: 89.0%, Height: 21.0% */}
+        {/* 3. PERSONAL DETAILS BLUE BOX (3 LINES: મો., ગામ, ક્ષેત્ર + QR CODE) */}
+        {/* Bounds: Left: 5.5%, Top: 68.5%, Width: 89.0%, Height: 19.5% */}
         {/* Solid #00366C background completely covers the old pre-printed box, labels and QR code */}
-        {/* Titles and values are rendered together in the same flex row, guaranteeing 100% exact alignment in English or Gujarati! */}
+        {/* Titles and values are in the same flex row, guaranteeing 100% exact alignment in English or Gujarati! */}
         <div
           className="absolute z-10 rounded-xl border-[2px] border-white flex items-center justify-between p-2.5 sm:p-3 shadow-md"
           style={{
-            top: '68.2%',
+            top: '68.5%',
             left: '5.5%',
             width: '89.0%',
-            height: '21.0%',
+            height: '19.5%',
             backgroundColor: '#00366C',
             boxSizing: 'border-box',
           }}
         >
-          {/* Left Column: 5 Detail Rows */}
-          <div className="flex-1 h-full flex flex-col justify-between pr-2.5 min-w-0">
-            {/* Line 1: ID */}
+          {/* Left Column: 3 Detail Rows (Mobile, Village, Kshetra) */}
+          <div className="flex-1 h-full flex flex-col justify-around pr-2.5 min-w-0">
+            {/* Line 1: Mobile */}
             <div className="flex items-center min-w-0">
-              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
-                ID :
-              </span>
-              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wider truncate select-text">
-                {cleanVolunteerId}
-              </span>
-            </div>
-
-            {/* Line 2: Name */}
-            <div className="flex items-center min-w-0">
-              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
-                નામ :
-              </span>
-              <span
-                className={`font-extrabold text-white truncate select-text ${getNameFontSize(
-                  name || '—'
-                )}`}
-                title={name}
-              >
-                {name || '—'}
-              </span>
-            </div>
-
-            {/* Line 3: Mobile */}
-            <div className="flex items-center min-w-0">
-              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
+              <span className="font-extrabold text-white text-[12px] sm:text-[14px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
                 મો. :
               </span>
-              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-widest truncate select-text">
+              <span className="font-extrabold text-white text-[12px] sm:text-[14px] tracking-widest truncate select-text">
                 {mobileNumber || '—'}
               </span>
             </div>
 
-            {/* Line 4: Village */}
+            {/* Line 2: Village */}
             <div className="flex items-center min-w-0">
-              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
+              <span className="font-extrabold text-white text-[12px] sm:text-[14px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
                 ગામ :
               </span>
-              <span className="font-extrabold text-white text-[11px] sm:text-[13px] truncate select-text">
+              <span className="font-extrabold text-white text-[12px] sm:text-[14px] truncate select-text">
                 {villageName || '—'}
               </span>
             </div>
 
-            {/* Line 5: Kshetra */}
+            {/* Line 3: Kshetra */}
             <div className="flex items-center min-w-0">
-              <span className="font-extrabold text-white text-[11px] sm:text-[13px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
+              <span className="font-extrabold text-white text-[12px] sm:text-[14px] tracking-wide shrink-0 w-[42px] sm:w-[48px]">
                 ક્ષેત્ર :
               </span>
-              <span className="font-extrabold text-white text-[11px] sm:text-[13px] truncate select-text">
+              <span className="font-extrabold text-white text-[12px] sm:text-[14px] truncate select-text">
                 {xetraName || '—'}
               </span>
             </div>
@@ -220,6 +196,30 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
               className="w-full h-full object-contain"
             />
           </div>
+        </div>
+
+        {/* 4. DYNAMIC SEVA VIBHAG (AT THE BOTTOM, REPLACING THE LAST QUOTE) */}
+        {/* Optical center: X: 50.0%, Y: 93.0%, Width: 90.0%, Height: 5.5% */}
+        <div
+          className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
+          style={{
+            top: '93.0%',
+            left: '50.0%',
+            width: '90.0%',
+            height: '5.5%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <span
+            className={`font-black tracking-wide text-[#0C3260] text-center leading-[1.15] whitespace-nowrap overflow-visible drop-shadow-sm ${getVibhagFontSize(
+              sevaVibhagName || 'સ્વયંસેવક દળ'
+            )}`}
+            style={{
+              fontFamily: "'Noto Sans Gujarati', sans-serif",
+            }}
+          >
+            {sevaVibhagName || 'સ્વયંસેવક દળ'}
+          </span>
         </div>
       </div>
     );

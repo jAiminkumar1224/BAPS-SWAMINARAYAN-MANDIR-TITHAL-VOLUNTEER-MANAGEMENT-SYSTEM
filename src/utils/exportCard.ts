@@ -54,6 +54,7 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
     imageTimeout: 15000,
     width,
     height,
+    windowWidth: 1200,
     onclone: (clonedDoc, clonedElement) => {
       // Inject Google Font stylesheet into cloned head if not present
       if (!clonedDoc.getElementById('noto-sans-gujarati-font')) {

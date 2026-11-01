@@ -37,21 +37,22 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
     const cleanVolunteerId = (volunteerId || 'BAPS-74930-TNL').trim();
     const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify/${cleanVolunteerId}`;
 
-    // Auto font size for Volunteer Name inside the prominent White Box below photo
+    // Standardized font size for Volunteer Name inside the prominent White Box below photo
+    // Card size is fixed 378x512; fixed sizing ensures 100% identical rendering across all devices & exports
     const getNameFontSize = (text: string) => {
       const len = text ? text.length : 0;
-      if (len > 24) return 'text-[13px] sm:text-[15.5px]';
-      if (len > 18) return 'text-[15px] sm:text-[18px]';
-      if (len > 12) return 'text-[17px] sm:text-[20.5px]';
-      return 'text-[19px] sm:text-[23px]';
+      if (len > 24) return 'text-[14.5px]';
+      if (len > 18) return 'text-[16.5px]';
+      if (len > 12) return 'text-[18.5px]';
+      return 'text-[21px]';
     };
 
-    // Prominent large font size for Seva Vibhag at the bottom (exact match to reference image)
+    // Standardized font size for Seva Vibhag at the bottom
     const getVibhagFontSize = (text: string) => {
       const len = text ? text.length : 0;
-      if (len > 24) return 'text-[16px] sm:text-[19px]';
-      if (len > 16) return 'text-[19px] sm:text-[23px]';
-      return 'text-[22px] sm:text-[27px]';
+      if (len > 24) return 'text-[17.5px]';
+      if (len > 16) return 'text-[20.5px]';
+      return 'text-[24px]';
     };
 
     return (
@@ -114,15 +115,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         </div>
 
         {/* 2. VOLUNTEER NAME (IN THE PROMINENT WHITE BOX BELOW PHOTO) */}
-        {/* Optical center: X: 50.0%, Y: 65.30%, Width: 88.0%, Height: 6.5% */}
-        {/* Explicit coordinates (no CSS transform) for 100% parity: Top = 65.30% - 3.25% = 62.05%, Left = 6.0% */}
+        {/* Open white box range in template: 625px (61.0%) to 690px (67.4%) */}
+        {/* Optical center: X: 50.0%, Y: 64.20%, Width: 90.0%, Height: 6.0% */}
+        {/* Top = 61.2%, Bottom = 67.2% gives exactly equal padding above and below inside white box */}
         <div
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '62.05%',
-            left: '6.0%',
-            width: '88.0%',
-            height: '6.5%',
+            top: '61.2%',
+            left: '5.0%',
+            width: '90.0%',
+            height: '6.0%',
           }}
         >
           <span
@@ -159,19 +161,19 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
             {/* Line 1: Mobile - overflow-visible & whitespace-nowrap so digits are NEVER clipped */}
             <div className="flex items-center min-w-0">
               <span
-                className="font-extrabold text-white text-[12.5px] sm:text-[14px] tracking-wide shrink-0 w-[34px] sm:w-[38px]"
+                className="font-extrabold text-white text-[13.5px] tracking-wide shrink-0 w-[36px]"
                 style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
               >
                 મો.
               </span>
               <span
-                className="font-extrabold text-white text-[12.5px] sm:text-[14px] shrink-0 w-[12px] text-center mr-1.5"
+                className="font-extrabold text-white text-[13.5px] shrink-0 w-[12px] text-center mr-1.5"
                 style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
               >
                 :
               </span>
               <span
-                className="font-extrabold text-white text-[12.5px] sm:text-[14px] tracking-wide whitespace-nowrap overflow-visible select-text"
+                className="font-extrabold text-white text-[13.5px] tracking-wide whitespace-nowrap overflow-visible select-text"
                 style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
               >
                 {mobileNumber || '—'}
@@ -181,19 +183,19 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
             {/* Line 2: Village */}
             <div className="flex items-center min-w-0">
               <span
-                className="font-extrabold text-white text-[12.5px] sm:text-[14px] tracking-wide shrink-0 w-[34px] sm:w-[38px]"
+                className="font-extrabold text-white text-[13.5px] tracking-wide shrink-0 w-[36px]"
                 style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
               >
                 ગામ
               </span>
               <span
-                className="font-extrabold text-white text-[12.5px] sm:text-[14px] shrink-0 w-[12px] text-center mr-1.5"
+                className="font-extrabold text-white text-[13.5px] shrink-0 w-[12px] text-center mr-1.5"
                 style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
               >
                 :
               </span>
               <span
-                className="font-extrabold text-white text-[12.5px] sm:text-[14px] truncate select-text"
+                className="font-extrabold text-white text-[13.5px] truncate select-text"
                 style={{
                   fontFamily: "'Noto Sans Gujarati', sans-serif",
                   letterSpacing: 'normal',
@@ -206,19 +208,19 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
             {/* Line 3: Kshetra */}
             <div className="flex items-center min-w-0">
               <span
-                className="font-extrabold text-white text-[12.5px] sm:text-[14px] tracking-wide shrink-0 w-[34px] sm:w-[38px]"
+                className="font-extrabold text-white text-[13.5px] tracking-wide shrink-0 w-[36px]"
                 style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
               >
                 ક્ષેત્ર
               </span>
               <span
-                className="font-extrabold text-white text-[12.5px] sm:text-[14px] shrink-0 w-[12px] text-center mr-1.5"
+                className="font-extrabold text-white text-[13.5px] shrink-0 w-[12px] text-center mr-1.5"
                 style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
               >
                 :
               </span>
               <span
-                className="font-extrabold text-white text-[12.5px] sm:text-[14px] truncate select-text"
+                className="font-extrabold text-white text-[13.5px] truncate select-text"
                 style={{
                   fontFamily: "'Noto Sans Gujarati', sans-serif",
                   letterSpacing: 'normal',

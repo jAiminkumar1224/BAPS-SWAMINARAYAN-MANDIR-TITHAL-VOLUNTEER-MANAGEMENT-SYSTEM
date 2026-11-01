@@ -124,21 +124,23 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       const detailsBox = clonedElement.querySelector<HTMLElement>('[data-card-details-box="true"]');
       if (detailsBox) {
         detailsBox.style.transform = 'none';
-        detailsBox.style.top = '68.5%';
+        // Raised top slightly and increased height to fully cover the template's blue box area
+        // and prevent the kshetra (3rd) row from overflowing out of the box bottom edge
+        detailsBox.style.top = '67.5%';
         detailsBox.style.left = '2.8%';
         detailsBox.style.width = '94.4%';
-        detailsBox.style.height = '18.0%';
+        detailsBox.style.height = '19.5%';
         detailsBox.style.boxSizing = 'border-box';
-        detailsBox.style.padding = '4px 10px 4px 12px';
+        detailsBox.style.padding = '6px 10px 6px 12px';
         detailsBox.style.overflow = 'hidden';
 
-        // Normalize all text spans: use lineHeight 1.3 matching the IdCard source
+        // Normalize all text spans: use lineHeight 1.2 (tighter) so 3 rows fit comfortably
         const allSpans = detailsBox.querySelectorAll<HTMLElement>('span');
         allSpans.forEach((s) => {
           s.style.overflow = 'visible';
           s.style.textOverflow = 'clip';
           s.style.whiteSpace = 'nowrap';
-          s.style.lineHeight = '1.3';
+          s.style.lineHeight = '1.2';
           s.style.display = 'inline-block';
         });
 
@@ -163,10 +165,11 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       }
 
       // 4. Seva Vibhag: Positioned to match website preview exactly (text optical center at 91.0%)
+      // top adjusted down slightly since details box now starts at 67.5% with height 19.5% (ends at 87%)
       const vibhagBox = clonedElement.querySelector<HTMLElement>('[data-card-vibhag-box="true"]');
       if (vibhagBox) {
         vibhagBox.style.transform = 'none';
-        vibhagBox.style.top = '86.5%';
+        vibhagBox.style.top = '88.5%';
         vibhagBox.style.left = '4.0%';
         vibhagBox.style.width = '92.0%';
         vibhagBox.style.height = '6.0%';

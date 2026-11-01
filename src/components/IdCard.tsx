@@ -150,14 +150,15 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         {/* 74mm physical width => 2mm = 2.703%. Left moves from 5.5% to 2.8%, right margin from 5.5% to 2.8%, Width = 94.4% */}
         {/* Solid #00366C background completely covers the pre-printed box, labels and QR code */}
         {/* The 2 dots (:) are dedicated elements with identical width, perfectly locked in a single straight vertical line */}
+        {/* top/height matched to exportCard.ts onclone values for pixel-perfect PDF parity */}
         <div
           data-card-details-box="true"
           className="absolute z-10 rounded-xl border-[2px] border-white flex items-center justify-between p-2.5 shadow-md"
           style={{
-            top: '68.5%',
+            top: '67.5%',
             left: '2.8%',
             width: '94.4%',
-            height: '18.0%',
+            height: '19.5%',
             backgroundColor: '#00366C',
             boxSizing: 'border-box',
           }}
@@ -257,12 +258,13 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         </div>
 
         {/* 4. DYNAMIC SEVA VIBHAG */}
-        {/* Optical center: X: 50.0%, Y: 91.0% - Perfectly balanced below blue details box and above bottom edge */}
+        {/* Optical center: X: 50.0%, Y: 91.5% - Perfectly balanced below blue details box and above bottom edge */}
+        {/* Details box ends at 87% (67.5% + 19.5%). Vibhag centered at 91.5% gives 4.5% breathing room above */}
         <div
           data-card-vibhag-box="true"
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '91.0%',
+            top: '91.5%',
             left: '50.0%',
             width: '92.0%',
             height: '6.0%',

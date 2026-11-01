@@ -79,15 +79,15 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         />
 
         {/* 1. CENTERED CIRCULAR VOLUNTEER PHOTO */}
-        {/* Exact concentric geometric center: X: 50.0%, Y: 52.37%, Width: 21.8%, Height: 16.0% */}
+        {/* Concentric center: X: 50.0%, Y: 52.37%, Width: 21.8%, Height: 16.0% */}
+        {/* Explicit coordinates (no CSS transform) for 100% parity between preview and html2canvas */}
         <div
           className="absolute z-10 flex items-center justify-center pointer-events-none"
           style={{
-            top: '52.37%',
-            left: '50.0%',
+            top: '44.37%',
+            left: '39.1%',
             width: '21.8%',
             height: '16.0%',
-            transform: 'translate(-50%, -50%)',
           }}
         >
           <div className="w-full h-full rounded-full overflow-hidden bg-[#0A2E5C] flex items-center justify-center shadow-inner">
@@ -114,15 +114,15 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         </div>
 
         {/* 2. VOLUNTEER NAME (IN THE PROMINENT WHITE BOX BELOW PHOTO) */}
-        {/* Optical center: X: 50.0%, Y: 65.30%, Width: 88.0%, Height: 6.5%, overflow-visible prevents clipping */}
+        {/* Optical center: X: 50.0%, Y: 65.30%, Width: 88.0%, Height: 6.5% */}
+        {/* Explicit coordinates (no CSS transform) for 100% parity: Top = 65.30% - 3.25% = 62.05%, Left = 6.0% */}
         <div
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '65.30%',
-            left: '50.0%',
+            top: '62.05%',
+            left: '6.0%',
             width: '88.0%',
             height: '6.5%',
-            transform: 'translate(-50%, -50%)',
           }}
         >
           <span
@@ -139,15 +139,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         </div>
 
         {/* 3. PERSONAL DETAILS BLUE BOX (3 LINES: મો., ગામ, ક્ષેત્ર + QR CODE) */}
-        {/* Bounds: Left: 5.5%, Top: 68.5%, Width: 89.0%, Height: 19.5% */}
-        {/* Solid #00366C background completely covers the old pre-printed box, labels and QR code */}
-        {/* The 2 dots (:) are dedicated elements with identical width, perfectly locked in a single straight vertical line! */}
+        {/* TASK 1: Increased 2mm on left and 2mm on right */}
+        {/* 74mm physical width => 2mm = 2.703%. Left moves from 5.5% to 2.8%, right margin from 5.5% to 2.8%, Width = 94.4% */}
+        {/* Solid #00366C background completely covers the pre-printed box, labels and QR code */}
+        {/* The 2 dots (:) are dedicated elements with identical width, perfectly locked in a single straight vertical line */}
         <div
           className="absolute z-10 rounded-xl border-[2px] border-white flex items-center justify-between p-2.5 sm:p-3 shadow-md"
           style={{
             top: '68.5%',
-            left: '5.5%',
-            width: '89.0%',
+            left: '2.8%',
+            width: '94.4%',
             height: '19.5%',
             backgroundColor: '#00366C',
             boxSizing: 'border-box',
@@ -155,41 +156,74 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         >
           {/* Left Column: 3 Detail Rows (Mobile, Village, Kshetra) */}
           <div className="flex-1 h-full flex flex-col justify-around pr-2.5 min-w-0">
-            {/* Line 1: Mobile */}
+            {/* Line 1: Mobile - overflow-visible & whitespace-nowrap so digits are NEVER clipped */}
             <div className="flex items-center min-w-0">
-              <span className="font-extrabold text-white text-[12px] sm:text-[14px] tracking-wide shrink-0 w-[34px] sm:w-[38px]">
+              <span
+                className="font-extrabold text-white text-[12.5px] sm:text-[14px] tracking-wide shrink-0 w-[34px] sm:w-[38px]"
+                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
+              >
                 મો.
               </span>
-              <span className="font-extrabold text-white text-[12px] sm:text-[14px] shrink-0 w-[12px] text-center mr-1.5">
+              <span
+                className="font-extrabold text-white text-[12.5px] sm:text-[14px] shrink-0 w-[12px] text-center mr-1.5"
+                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
+              >
                 :
               </span>
-              <span className="font-extrabold text-white text-[12px] sm:text-[14px] tracking-widest truncate select-text">
+              <span
+                className="font-extrabold text-white text-[12.5px] sm:text-[14px] tracking-wide whitespace-nowrap overflow-visible select-text"
+                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
+              >
                 {mobileNumber || '—'}
               </span>
             </div>
 
             {/* Line 2: Village */}
             <div className="flex items-center min-w-0">
-              <span className="font-extrabold text-white text-[12px] sm:text-[14px] tracking-wide shrink-0 w-[34px] sm:w-[38px]">
+              <span
+                className="font-extrabold text-white text-[12.5px] sm:text-[14px] tracking-wide shrink-0 w-[34px] sm:w-[38px]"
+                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
+              >
                 ગામ
               </span>
-              <span className="font-extrabold text-white text-[12px] sm:text-[14px] shrink-0 w-[12px] text-center mr-1.5">
+              <span
+                className="font-extrabold text-white text-[12.5px] sm:text-[14px] shrink-0 w-[12px] text-center mr-1.5"
+                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
+              >
                 :
               </span>
-              <span className="font-extrabold text-white text-[12px] sm:text-[14px] truncate select-text">
+              <span
+                className="font-extrabold text-white text-[12.5px] sm:text-[14px] truncate select-text"
+                style={{
+                  fontFamily: "'Noto Sans Gujarati', sans-serif",
+                  letterSpacing: 'normal',
+                }}
+              >
                 {villageName || '—'}
               </span>
             </div>
 
             {/* Line 3: Kshetra */}
             <div className="flex items-center min-w-0">
-              <span className="font-extrabold text-white text-[12px] sm:text-[14px] tracking-wide shrink-0 w-[34px] sm:w-[38px]">
+              <span
+                className="font-extrabold text-white text-[12.5px] sm:text-[14px] tracking-wide shrink-0 w-[34px] sm:w-[38px]"
+                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
+              >
                 ક્ષેત્ર
               </span>
-              <span className="font-extrabold text-white text-[12px] sm:text-[14px] shrink-0 w-[12px] text-center mr-1.5">
+              <span
+                className="font-extrabold text-white text-[12.5px] sm:text-[14px] shrink-0 w-[12px] text-center mr-1.5"
+                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
+              >
                 :
               </span>
-              <span className="font-extrabold text-white text-[12px] sm:text-[14px] truncate select-text">
+              <span
+                className="font-extrabold text-white text-[12.5px] sm:text-[14px] truncate select-text"
+                style={{
+                  fontFamily: "'Noto Sans Gujarati', sans-serif",
+                  letterSpacing: 'normal',
+                }}
+              >
                 {xetraName || '—'}
               </span>
             </div>
@@ -207,16 +241,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </div>
         </div>
 
-        {/* 4. DYNAMIC SEVA VIBHAG (100% MATCH TO REFERENCE IMAGE, PURE CLEAN FONT ON SKY BLUE BACKGROUND) */}
+        {/* 4. DYNAMIC SEVA VIBHAG */}
         {/* Optical center: X: 50.0%, Y: 92.8%, Width: 92.0%, Height: 6.0% */}
+        {/* Explicit coordinates (no CSS transform) for 100% parity: Top = 92.8% - 3.0% = 89.8%, Left = 4.0% */}
         <div
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '92.8%',
-            left: '50.0%',
+            top: '89.8%',
+            left: '4.0%',
             width: '92.0%',
             height: '6.0%',
-            transform: 'translate(-50%, -50%)',
           }}
         >
           <span

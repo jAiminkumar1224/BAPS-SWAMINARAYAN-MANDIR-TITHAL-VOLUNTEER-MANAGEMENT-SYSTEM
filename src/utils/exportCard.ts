@@ -2,27 +2,96 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 /**
- * Capture an ID card element as a high-resolution canvas
- * Target 300 DPI: scale factor ~3 to produce ~874 x 1181 px
+ * Ensures all images inside an element are fully loaded and decoded before capture
  */
-export const captureCardCanvas = async (element: HTMLElement): Promise<HTMLCanvasElement> => {
+const waitForImages = async (element: HTMLElement): Promise<void> => {
+  const images = Array.from(element.querySelectorAll('img'));
+  await Promise.all(
+    images.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          if (img.complete && img.naturalWidth > 0) {
+            resolve();
+          } else {
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // don't block indefinitely on broken image
+          }
+        })
+    )
+  );
+};
+
+/**
+ * Capture an ID card element as a pristine high-resolution canvas.
+ * - Resolves all fonts and images before capture.
+ * - Neutralizes any parent/ancestor CSS transforms (such as modal scale-95) in cloned DOM.
+ * - Sets exact scale multiplier (3x) for 300 DPI (1134 × 1536 px).
+ * - Single source of truth for both PNG and PDF exports.
+ */
+export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCanvasElement> => {
+  // 1. Wait for web fonts (Noto Sans Gujarati) and all card images to finish loading
+  if (typeof document !== 'undefined' && document.fonts) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      // Continue if font ready check fails
+    }
+  }
+  await waitForImages(element);
+
+  // 2. Measure actual element bounds
+  const rect = element.getBoundingClientRect();
+  const width = Math.round(rect.width) || 378;
+  const height = Math.round(rect.height) || 512;
+
+  // 3. Render high-res canvas via html2canvas
   return await html2canvas(element, {
-    scale: 3, // High-resolution 300 DPI multiplier
+    scale: 3, // 300 DPI multiplier (378*3 = 1134, 512*3 = 1536)
     useCORS: true,
     allowTaint: true,
     backgroundColor: '#FFFDF5',
     logging: false,
     imageTimeout: 15000,
+    width,
+    height,
+    onclone: (clonedDoc, clonedElement) => {
+      // Inject Google Font stylesheet into cloned head if not present
+      if (!clonedDoc.getElementById('noto-sans-gujarati-font')) {
+        const link = clonedDoc.createElement('link');
+        link.id = 'noto-sans-gujarati-font';
+        link.rel = 'stylesheet';
+        link.href =
+          'https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@300;400;500;600;700;800;900&display=swap';
+        clonedDoc.head.appendChild(link);
+      }
+
+      // Remove any CSS transforms from the cloned card and all its ancestors
+      let curr: HTMLElement | null = clonedElement;
+      while (curr && curr !== clonedDoc.body) {
+        curr.style.transform = 'none';
+        curr.style.webkitTransform = 'none';
+        curr.style.animation = 'none';
+        curr.style.transition = 'none';
+        curr = curr.parentElement;
+      }
+
+      // Enforce clean dimensions on the cloned element
+      clonedElement.style.width = `${width}px`;
+      clonedElement.style.height = `${height}px`;
+      clonedElement.style.margin = '0';
+    },
   });
 };
 
+// Backwards-compatible alias for existing imports
+export const captureCardCanvas = captureVolunteerCard;
+
 /**
- * Download ID card as 300 DPI PNG
- * Approximately 874 × 1181 pixels
+ * Download ID card as 300 DPI lossless PNG (1134 × 1536 px)
  */
 export const downloadCardAsPng = async (element: HTMLElement, filename = 'BAPS-ID-Card.png') => {
   try {
-    const canvas = await captureCardCanvas(element);
+    const canvas = await captureVolunteerCard(element);
     const dataUrl = canvas.toDataURL('image/png', 1.0);
     const link = document.createElement('a');
     link.href = dataUrl;
@@ -37,23 +106,26 @@ export const downloadCardAsPng = async (element: HTMLElement, filename = 'BAPS-I
 };
 
 /**
- * Download ID card as exact 74mm x 100mm PDF
- * Zero unwanted margins, preserved color and Gujarati fonts
+ * Download ID card as exact 74mm x 100.23mm PDF
+ * Zero stretching, lossless PNG embedding, zero text clipping
  */
 export const downloadCardAsPdf = async (element: HTMLElement, filename = 'BAPS-ID-Card.pdf') => {
   try {
-    const canvas = await captureCardCanvas(element);
-    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    const canvas = await captureVolunteerCard(element);
+    // Use lossless PNG instead of lossy JPEG
+    const imgData = canvas.toDataURL('image/png', 1.0);
 
-    // jsPDF with exact 74mm x 100mm portrait dimensions
+    // Compute exact proportional height in mm for 74 mm width
+    const cardHeightMm = Number((74 * (canvas.height / canvas.width)).toFixed(2)); // ~100.23 mm
+
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: [74, 100],
+      format: [74, cardHeightMm],
       compress: true,
     });
 
-    pdf.addImage(imgData, 'JPEG', 0, 0, 74, 100);
+    pdf.addImage(imgData, 'PNG', 0, 0, 74, cardHeightMm, undefined, 'FAST');
     pdf.save(filename);
   } catch (error) {
     console.error('Error generating PDF:', error);
@@ -62,12 +134,11 @@ export const downloadCardAsPdf = async (element: HTMLElement, filename = 'BAPS-I
 };
 
 /**
- * Print ID card directly
- * Generates print iframe with @page styling { size: 74mm 100mm; margin: 0; }
+ * Print ID card directly with exact @page dimensions
  */
 export const printCard = async (element: HTMLElement) => {
   try {
-    const canvas = await captureCardCanvas(element);
+    const canvas = await captureVolunteerCard(element);
     const dataUrl = canvas.toDataURL('image/png', 1.0);
 
     const printWindow = window.open('', '_blank');
@@ -83,7 +154,7 @@ export const printCard = async (element: HTMLElement) => {
           <title>BAPS Swaminarayan Mandir Tithal - ID Card Print</title>
           <style>
             @page {
-              size: 74mm 100mm;
+              size: 74mm 100.23mm;
               margin: 0;
             }
             body {
@@ -98,7 +169,7 @@ export const printCard = async (element: HTMLElement) => {
             }
             img {
               width: 74mm;
-              height: 100mm;
+              height: 100.23mm;
               display: block;
               object-fit: contain;
             }

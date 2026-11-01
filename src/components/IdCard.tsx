@@ -37,17 +37,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
     const cleanVolunteerId = (volunteerId || 'BAPS-74930-TNL').trim();
     const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify/${cleanVolunteerId}`;
 
-    // Standardized font size for Volunteer Name inside the prominent White Box below photo
-    // Card size is fixed 378x512; fixed sizing ensures 100% identical rendering across all devices & exports
+    // Standardized typography for Volunteer Name
     const getNameFontSize = (text: string) => {
       const len = text ? text.length : 0;
-      if (len > 24) return 'text-[14.5px]';
-      if (len > 18) return 'text-[16.5px]';
+      if (len > 24) return 'text-[14px]';
+      if (len > 18) return 'text-[16px]';
       if (len > 12) return 'text-[18.5px]';
       return 'text-[21px]';
     };
 
-    // Standardized font size for Seva Vibhag at the bottom
+    // Standardized typography for Seva Vibhag at bottom
     const getVibhagFontSize = (text: string) => {
       const len = text ? text.length : 0;
       if (len > 24) return 'text-[17.5px]';
@@ -80,15 +79,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         />
 
         {/* 1. CENTERED CIRCULAR VOLUNTEER PHOTO */}
-        {/* Concentric center: X: 50.0%, Y: 52.37%, Width: 21.8%, Height: 16.0% */}
-        {/* Explicit coordinates (no CSS transform) for 100% parity between preview and html2canvas */}
+        {/* Exact concentric geometric center: X: 50.0%, Y: 52.37% */}
         <div
+          data-card-photo-box="true"
           className="absolute z-10 flex items-center justify-center pointer-events-none"
           style={{
-            top: '44.37%',
-            left: '39.1%',
+            top: '52.37%',
+            left: '50.0%',
             width: '21.8%',
             height: '16.0%',
+            transform: 'translate(-50%, -50%)',
           }}
         >
           <div className="w-full h-full rounded-full overflow-hidden bg-[#0A2E5C] flex items-center justify-center shadow-inner">
@@ -115,16 +115,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         </div>
 
         {/* 2. VOLUNTEER NAME (IN THE PROMINENT WHITE BOX BELOW PHOTO) */}
-        {/* Open white box range in template: 625px (61.0%) to 690px (67.4%) */}
-        {/* Optical center: X: 50.0%, Y: 64.20%, Width: 90.0%, Height: 6.0% */}
-        {/* Top = 61.2%, Bottom = 67.2% gives exactly equal padding above and below inside white box */}
+        {/* Preserves exact optical center for website preview */}
         <div
+          data-card-name-box="true"
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '61.2%',
-            left: '5.0%',
-            width: '90.0%',
-            height: '6.0%',
+            top: '65.30%',
+            left: '50.0%',
+            width: '88.0%',
+            height: '6.5%',
+            transform: 'translate(-50%, -50%)',
           }}
         >
           <span
@@ -146,6 +146,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         {/* Solid #00366C background completely covers the pre-printed box, labels and QR code */}
         {/* The 2 dots (:) are dedicated elements with identical width, perfectly locked in a single straight vertical line */}
         <div
+          data-card-details-box="true"
           className="absolute z-10 rounded-xl border-[2px] border-white flex items-center justify-between p-2.5 sm:p-3 shadow-md"
           style={{
             top: '68.5%',
@@ -244,15 +245,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         </div>
 
         {/* 4. DYNAMIC SEVA VIBHAG */}
-        {/* Optical center: X: 50.0%, Y: 92.8%, Width: 92.0%, Height: 6.0% */}
-        {/* Explicit coordinates (no CSS transform) for 100% parity: Top = 92.8% - 3.0% = 89.8%, Left = 4.0% */}
+        {/* Exact optical center: X: 50.0%, Y: 92.8% */}
         <div
+          data-card-vibhag-box="true"
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '89.8%',
-            left: '4.0%',
+            top: '92.8%',
+            left: '50.0%',
             width: '92.0%',
             height: '6.0%',
+            transform: 'translate(-50%, -50%)',
           }}
         >
           <span

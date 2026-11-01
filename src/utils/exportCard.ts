@@ -24,9 +24,10 @@ const waitForImages = async (element: HTMLElement): Promise<void> => {
 /**
  * Capture an ID card element as a pristine high-resolution canvas.
  * - Resolves all fonts and images before capture.
- * - Neutralizes any parent/ancestor CSS transforms (such as modal scale-95) in cloned DOM.
+ * - In onclone (PDF/PNG generator):
+ *   Neutralizes CSS translate transforms and explicitly positions the cloned elements
+ *   so that the captured export visually matches the website preview 100%.
  * - Sets exact scale multiplier (3x) for 300 DPI (1134 × 1536 px).
- * - Single source of truth for both PNG and PDF exports.
  */
 export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCanvasElement> => {
   // 1. Wait for web fonts (Noto Sans Gujarati) and all card images to finish loading
@@ -80,6 +81,40 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       clonedElement.style.width = `${width}px`;
       clonedElement.style.height = `${height}px`;
       clonedElement.style.margin = '0';
+
+      // PDF Generator Fix: Adjust cloned element coordinates for 100% visual parity with website
+      // 1. Volunteer Name: place dead-center in white box (compensates for html2canvas baseline calculation)
+      const nameBox = clonedElement.querySelector<HTMLElement>('[data-card-name-box="true"]');
+      if (nameBox) {
+        nameBox.style.transform = 'none';
+        nameBox.style.top = '60.8%';
+        nameBox.style.left = '5.0%';
+        nameBox.style.width = '90.0%';
+        nameBox.style.height = '6.0%';
+        nameBox.style.display = 'flex';
+        nameBox.style.alignItems = 'center';
+        nameBox.style.justifyContent = 'center';
+      }
+
+      // 2. Circular Photo: maintain exact concentric alignment
+      const photoBox = clonedElement.querySelector<HTMLElement>('[data-card-photo-box="true"]');
+      if (photoBox) {
+        photoBox.style.transform = 'none';
+        photoBox.style.top = '44.37%';
+        photoBox.style.left = '39.1%';
+        photoBox.style.width = '21.8%';
+        photoBox.style.height = '16.0%';
+      }
+
+      // 3. Seva Vibhag: maintain optical bottom alignment
+      const vibhagBox = clonedElement.querySelector<HTMLElement>('[data-card-vibhag-box="true"]');
+      if (vibhagBox) {
+        vibhagBox.style.transform = 'none';
+        vibhagBox.style.top = '89.8%';
+        vibhagBox.style.left = '4.0%';
+        vibhagBox.style.width = '92.0%';
+        vibhagBox.style.height = '6.0%';
+      }
     },
   });
 };

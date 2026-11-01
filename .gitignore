@@ -28,4 +28,9 @@ dist-ssr
 .env*.local
 
 # Local tools
-/tools/
+tools
+tools/
+tools/**
+scratch
+*.zip
+

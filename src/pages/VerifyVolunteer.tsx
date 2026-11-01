@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { VerificationData } from '../types';
 import {
@@ -176,13 +176,6 @@ export const VerifyVolunteer: React.FC = () => {
             <p className="text-xs text-[#8A6818] font-bold">તીથલ - વલસાડ</p>
           </div>
         </div>
-
-        <Link
-          to="/login"
-          className="text-xs font-bold text-amber-900 hover:text-amber-950 px-3 py-1.5 rounded-lg bg-amber-100/60 border border-amber-300/40"
-        >
-          એડમિન પોર્ટલ &rarr;
-        </Link>
       </header>
 
       {/* Main Verification Card */}

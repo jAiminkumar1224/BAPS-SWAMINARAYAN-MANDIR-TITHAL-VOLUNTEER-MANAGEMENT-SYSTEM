@@ -46,12 +46,12 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
       return 'text-[21px]';
     };
 
-    // Standardized typography for Seva Vibhag at bottom
+    // Standardized typography for Seva Vibhag at bottom (+1 font size increase)
     const getVibhagFontSize = (text: string) => {
       const len = text ? text.length : 0;
-      if (len > 24) return 'text-[17.5px]';
-      if (len > 16) return 'text-[20.5px]';
-      return 'text-[24px]';
+      if (len > 24) return 'text-[19.5px]';
+      if (len > 16) return 'text-[22.5px]';
+      return 'text-[26.5px]';
     };
 
     return (
@@ -76,6 +76,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           alt="BAPS Tithal ID Card Template"
           className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
           crossOrigin="anonymous"
+          style={{ imageRendering: '-webkit-optimize-contrast' }}
         />
 
         {/* 1. CENTERED CIRCULAR VOLUNTEER PHOTO */}
@@ -147,7 +148,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         {/* The 2 dots (:) are dedicated elements with identical width, perfectly locked in a single straight vertical line */}
         <div
           data-card-details-box="true"
-          className="absolute z-10 rounded-xl border-[2px] border-white flex items-center justify-between p-2.5 sm:p-3 shadow-md"
+          className="absolute z-10 rounded-xl border-[2px] border-white flex items-center justify-between p-2.5 shadow-md"
           style={{
             top: '68.5%',
             left: '2.8%',
@@ -157,8 +158,11 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
             boxSizing: 'border-box',
           }}
         >
-          {/* Left Column: 3 Detail Rows (Mobile, Village, Kshetra) */}
-          <div className="flex-1 h-full flex flex-col justify-around pr-2.5 min-w-0">
+          {/* Left Column: 3 Detail Rows (Mobile, Village, Kshetra) - top aligned */}
+          <div
+            className="flex-1 h-full flex flex-col justify-start gap-2 pr-2.5 min-w-0"
+            style={{ paddingTop: '1px', paddingBottom: '1px' }}
+          >
             {/* Line 1: Mobile - overflow-visible & whitespace-nowrap so digits are NEVER clipped */}
             <div className="flex items-center min-w-0">
               <span
@@ -175,13 +179,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
               </span>
               <span
                 className="font-extrabold text-white text-[13.5px] tracking-wide whitespace-nowrap overflow-visible select-text"
-                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
+                style={{
+                  fontFamily: "'Noto Sans Gujarati', sans-serif",
+                  lineHeight: '1.3',
+                }}
               >
                 {mobileNumber || '—'}
               </span>
             </div>
 
-            {/* Line 2: Village */}
+            {/* Line 2: Village - overflow-visible & whitespace-nowrap so Gujarati/English descenders are NEVER cut */}
             <div className="flex items-center min-w-0">
               <span
                 className="font-extrabold text-white text-[13.5px] tracking-wide shrink-0 w-[36px]"
@@ -196,17 +203,18 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
                 :
               </span>
               <span
-                className="font-extrabold text-white text-[13.5px] truncate select-text"
+                className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-visible select-text"
                 style={{
                   fontFamily: "'Noto Sans Gujarati', sans-serif",
                   letterSpacing: 'normal',
+                  lineHeight: '1.3',
                 }}
               >
                 {villageName || '—'}
               </span>
             </div>
 
-            {/* Line 3: Kshetra */}
+            {/* Line 3: Kshetra - overflow-visible & whitespace-nowrap so Gujarati/English descenders are NEVER cut */}
             <div className="flex items-center min-w-0">
               <span
                 className="font-extrabold text-white text-[13.5px] tracking-wide shrink-0 w-[36px]"
@@ -221,10 +229,11 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
                 :
               </span>
               <span
-                className="font-extrabold text-white text-[13.5px] truncate select-text"
+                className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-visible select-text"
                 style={{
                   fontFamily: "'Noto Sans Gujarati', sans-serif",
                   letterSpacing: 'normal',
+                  lineHeight: '1.3',
                 }}
               >
                 {xetraName || '—'}
@@ -245,15 +254,15 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         </div>
 
         {/* 4. DYNAMIC SEVA VIBHAG */}
-        {/* Exact optical center: X: 50.0%, Y: 92.8% */}
+        {/* Exact optical center: X: 50.0%, Y: 93.5% */}
         <div
           data-card-vibhag-box="true"
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '92.8%',
+            top: '93.5%',
             left: '50.0%',
             width: '92.0%',
-            height: '6.0%',
+            height: '6.5%',
             transform: 'translate(-50%, -50%)',
           }}
         >

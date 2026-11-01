@@ -6,7 +6,17 @@ import { KSHETRA_LIST } from '../constants/kshetra';
 import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
 import { IdCard } from '../components/IdCard';
 import { useAuth } from '../context/AuthContext';
-import { downloadCardAsPdf, downloadCardAsPng, printCard } from '../utils/exportCard';
+import {
+  downloadCardAsPdf,
+  downloadCardAsPng,
+  printCard,
+  captureVolunteerCard,
+  create12x18BatchPdf,
+  addCardTo12x18BatchPdf,
+  preloadPhotos,
+  CARDS_PER_PAGE,
+} from '../utils/exportCard';
+import { flushSync } from 'react-dom';
 import {
   Search,
   Filter,
@@ -53,7 +63,20 @@ export const VolunteersList: React.FC = () => {
 
   // Multi-card selection for batch printing
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isBatchPrinting, setIsBatchPrinting] = useState(false);
+
+  // Batch PDF Generation (12x18 inch sheets, 12 cards/page)
+  const [isBatchGenerating, setIsBatchGenerating] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({
+    current: 0,
+    total: 0,
+    page: 1,
+    totalPages: 1,
+    percentage: 0,
+    volunteerName: '',
+  });
+  const [batchVolunteer, setBatchVolunteer] = useState<Volunteer | null>(null);
+  const batchCardRef = useRef<HTMLDivElement>(null);
+  const cancelBatchRef = useRef<boolean>(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -224,11 +247,14 @@ export const VolunteersList: React.FC = () => {
     currentPage * pageSize
   );
 
+  const isAllSelected =
+    filteredVolunteers.length > 0 && selectedIds.length === filteredVolunteers.length;
+
   const toggleSelectAll = () => {
-    if (selectedIds.length === paginatedVolunteers.length) {
+    if (selectedIds.length > 0) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(paginatedVolunteers.map((v) => v.id));
+      setSelectedIds(filteredVolunteers.map((v) => v.id));
     }
   };
 
@@ -238,8 +264,86 @@ export const VolunteersList: React.FC = () => {
     );
   };
 
-  const handlePrintBatch = () => {
-    window.print();
+  // 12x18 Batch PDF Generation with Print Scaling Protection & Unlimited Pagination
+  const handleBatchDownloadPdf = async (items: Volunteer[]) => {
+    if (items.length === 0) {
+      alert('કોઈ સ્વયંસેવક પસંદ કરેલા નથી.');
+      return;
+    }
+
+    setIsBatchGenerating(true);
+    cancelBatchRef.current = false;
+
+    const total = items.length;
+    const totalPages = Math.ceil(total / CARDS_PER_PAGE);
+
+    setBatchProgress({
+      current: 0,
+      total,
+      page: 1,
+      totalPages,
+      percentage: 0,
+      volunteerName: items[0]?.name || '',
+    });
+
+    try {
+      // Step 1: Parallel photo preloading into browser cache
+      const photoUrls = items.map((v) => getStoragePublicUrl(v.photo_path));
+      await preloadPhotos(photoUrls);
+
+      // Step 2: Initialize jsPDF document with 12x18 inch pages and PrintScaling: None
+      const pdf = create12x18BatchPdf();
+
+      // Step 3: Sequential processing loop - handles 100+ cards smoothly without UI freeze
+      for (let i = 0; i < total; i++) {
+        if (cancelBatchRef.current) {
+          break;
+        }
+
+        const vol = items[i];
+        const pageIndex = Math.floor(i / CARDS_PER_PAGE);
+
+        setBatchProgress({
+          current: i + 1,
+          total,
+          page: pageIndex + 1,
+          totalPages,
+          percentage: Math.round(((i + 1) / total) * 100),
+          volunteerName: vol.name,
+        });
+
+        // Synchronously mount card into DOM for capture
+        flushSync(() => {
+          setBatchVolunteer(vol);
+        });
+
+        if (!batchCardRef.current) {
+          throw new Error('Batch card container unavailable');
+        }
+
+        // Capture high-res canvas at 300 DPI
+        const canvas = await captureVolunteerCard(batchCardRef.current);
+        const imgData = canvas.toDataURL('image/png', 1.0);
+
+        // Add card to 12x18 PDF grid slot (74 x 100 mm with 2 mm gap)
+        addCardTo12x18BatchPdf(pdf, imgData, i);
+
+        // Yield execution so UI progress bar updates smoothly
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+
+      if (!cancelBatchRef.current) {
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const filename = `BAPS-Tithal-ID-Cards-12x18_${total}Cards_${timestamp}.pdf`;
+        pdf.save(filename);
+      }
+    } catch (err: any) {
+      console.error('Error generating batch PDF:', err);
+      alert('આઈડી કાર્ડ PDF બનાવવામાં ભૂલ થઈ. કૃપા કરીને ફરી પ્રયાસ કરો.');
+    } finally {
+      setBatchVolunteer(null);
+      setIsBatchGenerating(false);
+    }
   };
 
   return (
@@ -267,13 +371,42 @@ export const VolunteersList: React.FC = () => {
             <span>રીફ્રેશ</span>
           </button>
 
-          {selectedIds.length > 0 && (
+          {/* Batch PDF Download Button */}
+          {selectedIds.length > 0 ? (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  const selectedList = volunteers.filter((v) => selectedIds.includes(v.id));
+                  handleBatchDownloadPdf(selectedList);
+                }}
+                disabled={isBatchGenerating}
+                className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg flex items-center gap-1.5 transition disabled:opacity-50"
+                title="પસંદ કરેલા આઈડી કાર્ડ 12x18 ઇંચ શીટ (12 કાર્ડ/પેજ) PDF માં ડાઉનલોડ કરો"
+              >
+                <Download className="w-4 h-4" />
+                <span>પસંદ કરેલા {selectedIds.length} કાર્ડ PDF ડાઉનલોડ કરો</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBatchDownloadPdf(filteredVolunteers)}
+                disabled={isBatchGenerating}
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold border border-slate-300 shadow-sm flex items-center gap-1 transition"
+                title="બધા આઈડી કાર્ડ 12x18 ઇંચ શીટ PDF માં ડાઉનલોડ કરો"
+              >
+                <span>બધા ({filteredVolunteers.length})</span>
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={handlePrintBatch}
-              className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5 transition"
+              type="button"
+              onClick={() => handleBatchDownloadPdf(filteredVolunteers)}
+              disabled={isBatchGenerating || filteredVolunteers.length === 0}
+              className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg flex items-center gap-1.5 transition disabled:opacity-50"
+              title="બધા આઈડી કાર્ડ 12x18 ઇંચ શીટ (12 કાર્ડ/પેજ) PDF માં ડાઉનલોડ કરો"
             >
-              <Printer className="w-4 h-4" />
-              પસંદ કરેલા {selectedIds.length} કાર્ડ પ્રિન્ટ કરો
+              <Download className="w-4 h-4" />
+              <span>બધા આઈડી કાર્ડ PDF ડાઉનલોડ કરો</span>
             </button>
           )}
 
@@ -366,6 +499,33 @@ export const VolunteersList: React.FC = () => {
         </div>
       </div>
 
+      {/* Selection Status Banner */}
+      {selectedIds.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs text-blue-900 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-blue-800 bg-blue-200/70 px-2 py-0.5 rounded-md">
+              {selectedIds.length} કાર્ડ પસંદ કર્યા
+            </span>
+            <span>(12x18 ઇંચ શીટમાં {Math.ceil(selectedIds.length / 12)} પેજ બનશે)</span>
+            {selectedIds.length < filteredVolunteers.length && (
+              <button
+                type="button"
+                onClick={() => setSelectedIds(filteredVolunteers.map((v) => v.id))}
+                className="text-blue-700 underline font-bold hover:text-blue-900 ml-2"
+              >
+                તમામ {filteredVolunteers.length} સ્વયંસેવકો પસંદ કરો
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedIds([])}
+            className="text-rose-700 hover:text-rose-800 font-bold underline text-xs"
+          >
+            પસંદગી રદ કરો
+          </button>
+        </div>
+      )}
       {/* TABLE */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
@@ -374,7 +534,7 @@ export const VolunteersList: React.FC = () => {
               <tr>
                 <th className="p-3 text-center w-10">
                   <button onClick={toggleSelectAll} className="text-slate-500 hover:text-slate-800">
-                    {selectedIds.length === paginatedVolunteers.length && paginatedVolunteers.length > 0 ? (
+                    {selectedIds.length > 0 ? (
                       <CheckSquare className="w-4 h-4 text-amber-700" />
                     ) : (
                       <Square className="w-4 h-4" />
@@ -652,6 +812,103 @@ export const VolunteersList: React.FC = () => {
                 className="px-5 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-lg text-sm shadow flex items-center gap-2"
               >
                 {isDeleting ? 'ડિલીટ થાય છે...' : 'હા, ડિલીટ કરો'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Hidden IdCard container for 300 DPI batch capture */}
+      {batchVolunteer && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '378px',
+            height: '512px',
+            zIndex: -9999,
+            pointerEvents: 'none',
+            overflow: 'hidden',
+          }}
+        >
+          <IdCard
+            ref={batchCardRef}
+            volunteerId={batchVolunteer.volunteer_id}
+            name={batchVolunteer.name}
+            mobileNumber={batchVolunteer.mobile_number}
+            villageName={batchVolunteer.village_name}
+            xetraName={batchVolunteer.xetra_name}
+            sevaVibhagName={batchVolunteer.seva_vibhag?.name || 'સ્વયંસેવક દળ'}
+            photoUrl={getStoragePublicUrl(batchVolunteer.photo_path)}
+            size="full"
+          />
+        </div>
+      )}
+
+      {/* BATCH PROGRESS MODAL */}
+      {isBatchGenerating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700 animate-pulse flex-shrink-0">
+                <Download className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  આઈડી કાર્ડ PDF શીટ તૈયાર થઈ રહી છે...
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  12×18 ઇંચ શીટ (12 કાર્ડ/પેજ) • 100% Actual Size
+                </p>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs font-bold text-slate-700">
+                <span>પ્રગતિ ({batchProgress.percentage}%)</span>
+                <span>
+                  કાર્ડ {batchProgress.current} / {batchProgress.total}
+                </span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden border border-slate-200">
+                <div
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-200"
+                  style={{ width: `${batchProgress.percentage}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Detail Stats */}
+            <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-slate-500 block">કુલ પેજ:</span>
+                <span className="font-bold text-slate-800">
+                  પેજ {batchProgress.page} / {batchProgress.totalPages}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">હાલનું કાર્ડ:</span>
+                <span className="font-bold text-slate-800 truncate block" title={batchProgress.volunteerName}>
+                  {batchProgress.volunteerName || '-'}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-500 text-center">
+              મોટા ડેટા (100+ કાર્ડ) માટે બ્રાઉઝર ફ્રીઝ થયા વગર ક્રમશઃ PDF બની રહી છે.
+            </p>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  cancelBatchRef.current = true;
+                }}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition"
+              >
+                રદ કરો (Cancel)
               </button>
             </div>
           </div>

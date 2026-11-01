@@ -124,12 +124,12 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       const detailsBox = clonedElement.querySelector<HTMLElement>('[data-card-details-box="true"]');
       if (detailsBox) {
         detailsBox.style.transform = 'none';
-        detailsBox.style.top = '68.2%';
+        detailsBox.style.top = '68.5%';
         detailsBox.style.left = '2.8%';
         detailsBox.style.width = '94.4%';
-        detailsBox.style.height = '19.2%';
+        detailsBox.style.height = '18.0%';
         detailsBox.style.boxSizing = 'border-box';
-        detailsBox.style.padding = '6px 10px 6px 12px';
+        detailsBox.style.padding = '5px 10px 5px 12px';
 
         // Ensure all text spans in details box are visible and never clipped
         const allSpans = detailsBox.querySelectorAll<HTMLElement>('span');
@@ -157,23 +157,25 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
           const rows = Array.from(leftCol.children) as HTMLElement[];
           rows.forEach((row, idx) => {
             if (idx < rows.length - 1) {
-              row.style.marginBottom = '6px';
+              row.style.marginBottom = '5px';
             }
           });
         }
       }
 
-      // 4. Seva Vibhag: comfortable padding below blue box and above card bottom line
+      // 4. Seva Vibhag: Positioned to match website preview exactly (text optical center at 91.0%)
       const vibhagBox = clonedElement.querySelector<HTMLElement>('[data-card-vibhag-box="true"]');
       if (vibhagBox) {
         vibhagBox.style.transform = 'none';
-        vibhagBox.style.top = '91.2%';
+        vibhagBox.style.top = '86.5%';
         vibhagBox.style.left = '4.0%';
         vibhagBox.style.width = '92.0%';
-        vibhagBox.style.height = '5.5%';
+        vibhagBox.style.height = '6.0%';
         vibhagBox.style.display = 'flex';
         vibhagBox.style.alignItems = 'center';
         vibhagBox.style.justifyContent = 'center';
+        vibhagBox.style.padding = '0';
+        vibhagBox.style.margin = '0';
         const vibhagSpan = vibhagBox.querySelector<HTMLElement>('span');
         if (vibhagSpan) {
           vibhagSpan.style.display = 'inline-block';
@@ -287,4 +289,110 @@ export const printCard = async (element: HTMLElement) => {
     console.error('Error printing card:', error);
     alert('પ્રિન્ટ કરવામાં ભૂલ થઈ. કૃપા કરીને ફરી પ્રયાસ કરો.');
   }
+};
+
+
+/**
+ * 12 x 18 inch Sheet Print & Layout Specifications
+ * ------------------------------------------------
+ * Sheet Dimensions: 12 × 18 inches = 304.8 × 457.2 mm
+ * Inner Layout Box: 11.5 × 17.5 inches = 292.1 × 444.5 mm (0.25 in / 6.35 mm margins)
+ * Card Dimensions:  74 × 100 mm
+ * Spacing / Gap:    2 mm
+ * Capacity:         12 cards per page (3 columns × 4 rows)
+ * Total Grid Width: 3 × 74 + 2 × 2 = 226 mm (< 292.1 mm)
+ * Total Grid Height: 4 × 100 + 3 × 2 = 406 mm (< 444.5 mm)
+ * Horizontal Margin: (304.8 - 226) / 2 = 39.4 mm (> 6.35 mm)
+ * Vertical Margin:   (457.2 - 406) / 2 = 25.6 mm (> 6.35 mm)
+ */
+export const SHEET_12X18_WIDTH_MM = 304.8;
+export const SHEET_12X18_HEIGHT_MM = 457.2;
+export const INNER_BOX_WIDTH_MM = 292.1;
+export const INNER_BOX_HEIGHT_MM = 444.5;
+export const CARD_WIDTH_MM = 74;
+export const CARD_HEIGHT_MM = 100;
+export const CARD_GAP_MM = 2;
+export const CARDS_PER_PAGE = 12;
+export const GRID_COLS = 3;
+export const GRID_ROWS = 4;
+export const START_X_MM = 39.4;
+export const START_Y_MM = 25.6;
+
+/**
+ * Preload photos into browser cache before batch processing
+ */
+export const preloadPhotos = async (urls: (string | undefined | null)[]): Promise<void> => {
+  const validUrls = Array.from(new Set(urls.filter((u): u is string => Boolean(u))));
+  if (validUrls.length === 0) return;
+
+  await Promise.allSettled(
+    validUrls.map(
+      (url) =>
+        new Promise<void>((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+          img.src = url;
+        })
+    )
+  );
+};
+
+/**
+ * Creates a jsPDF document calibrated for 12x18 inch sheets with Print Scaling Protection
+ */
+export const create12x18BatchPdf = (): jsPDF => {
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [SHEET_12X18_WIDTH_MM, SHEET_12X18_HEIGHT_MM],
+    compress: false,
+  });
+
+  // Print Scaling Protection: Explicitly set /PrintScaling /None in PDF viewer preferences
+  // Ensures Adobe Acrobat, browser PDF viewers, and print dialogs default to 100% / Actual Size
+  if (typeof (pdf as any).viewerPreferences === 'function') {
+    (pdf as any).viewerPreferences({ PrintScaling: 'None' }, true);
+  }
+
+  return pdf;
+};
+
+/**
+ * Adds an ID card to the 12x18 inch sheet PDF at its exact grid position.
+ * Preserves exact 74 x 100 mm card dimensions and 2 mm gaps.
+ * On the final page, remaining cards stay at their fixed slot positions without stretching.
+ */
+export const addCardTo12x18BatchPdf = (
+  pdf: jsPDF,
+  imgData: string,
+  cardIndex: number
+) => {
+  const slotIndex = cardIndex % CARDS_PER_PAGE;
+
+  // Add new 12x18 page when starting a new page beyond page 1
+  if (cardIndex > 0 && slotIndex === 0) {
+    pdf.addPage([SHEET_12X18_WIDTH_MM, SHEET_12X18_HEIGHT_MM], 'portrait');
+  }
+
+  // Calculate 3-column x 4-row grid placement
+  const col = slotIndex % GRID_COLS;
+  const row = Math.floor(slotIndex / GRID_COLS);
+
+  // Exact coordinates: 39.4mm left margin, 25.6mm top margin, 2mm gaps
+  const x = START_X_MM + col * (CARD_WIDTH_MM + CARD_GAP_MM);
+  const y = START_Y_MM + row * (CARD_HEIGHT_MM + CARD_GAP_MM);
+
+  // Embed lossless PNG at exact physical measurements (74mm x 100mm)
+  pdf.addImage(
+    imgData,
+    'PNG',
+    x,
+    y,
+    CARD_WIDTH_MM,
+    CARD_HEIGHT_MM,
+    undefined,
+    'NONE'
+  );
 };

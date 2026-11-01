@@ -28,11 +28,15 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
     },
     ref
   ) => {
-    // Base URL for verification QR Code
+    // Canonical Production Base URL for Verification QR Code
+    // Ensures physical printed/downloaded cards always verify globally from any phone camera
+    const canonicalProductionUrl = 'https://baps-tithal-svayamsevakdal.netlify.app';
+    const rawUrl = appUrl || import.meta.env.VITE_APP_URL || canonicalProductionUrl;
+    // Guard against legacy broken URLs (e.g. baps-tithal.netlify.app) or localhost in exported cards
     const baseUrl =
-      appUrl ||
-      import.meta.env.VITE_APP_URL ||
-      (typeof window !== 'undefined' ? window.location.origin : 'https://baps-tithal-svayamsevakdal.netlify.app');
+      rawUrl.includes('baps-tithal.netlify.app') || rawUrl.includes('localhost')
+        ? canonicalProductionUrl
+        : rawUrl;
 
     const cleanVolunteerId = (volunteerId || 'BAPS-74930-TNL').trim();
     const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify/${cleanVolunteerId}`;
@@ -153,7 +157,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
             top: '68.5%',
             left: '2.8%',
             width: '94.4%',
-            height: '19.5%',
+            height: '18.0%',
             backgroundColor: '#00366C',
             boxSizing: 'border-box',
           }}
@@ -254,24 +258,27 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         </div>
 
         {/* 4. DYNAMIC SEVA VIBHAG */}
-        {/* Exact optical center: X: 50.0%, Y: 93.5% */}
+        {/* Optical center: X: 50.0%, Y: 91.0% - Perfectly balanced below blue details box and above bottom edge */}
         <div
           data-card-vibhag-box="true"
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '93.5%',
+            top: '91.0%',
             left: '50.0%',
             width: '92.0%',
-            height: '6.5%',
+            height: '6.0%',
             transform: 'translate(-50%, -50%)',
           }}
         >
           <span
-            className={`font-black tracking-wider text-[#063D69] text-center leading-[1.15] whitespace-nowrap overflow-visible ${getVibhagFontSize(
+            className={`font-black tracking-wider text-[#063D69] text-center leading-none whitespace-nowrap overflow-visible ${getVibhagFontSize(
               sevaVibhagName || 'સ્વયંસેવક દળ'
             )}`}
             style={{
               fontFamily: "'Noto Sans Gujarati', sans-serif",
+              lineHeight: '1',
+              margin: 0,
+              padding: 0,
             }}
           >
             {sevaVibhagName || 'સ્વયંસેવક દળ'}

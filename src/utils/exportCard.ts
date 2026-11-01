@@ -88,6 +88,7 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       clonedElement.style.margin = '0';
 
       // PDF Generator Fix: Adjust cloned element coordinates for 100% visual parity with website
+
       // 1. Volunteer Name: place dead-center in white box with EQUAL padding above and below
       const nameBox = clonedElement.querySelector<HTMLElement>('[data-card-name-box="true"]');
       if (nameBox) {
@@ -119,8 +120,7 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
         photoBox.style.height = '16.0%';
       }
 
-      // 3. Details Blue Box: position exactly matching website preview
-      // Ensures all rows (Mobile, Village, Kshetra) are TOP-ALIGNED and completely visible
+      // 3. Details Blue Box: match website layout exactly using justify-around for even row spacing
       const detailsBox = clonedElement.querySelector<HTMLElement>('[data-card-details-box="true"]');
       if (detailsBox) {
         detailsBox.style.transform = 'none';
@@ -129,36 +129,35 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
         detailsBox.style.width = '94.4%';
         detailsBox.style.height = '18.0%';
         detailsBox.style.boxSizing = 'border-box';
-        detailsBox.style.padding = '5px 10px 5px 12px';
+        detailsBox.style.padding = '4px 10px 4px 12px';
+        detailsBox.style.overflow = 'hidden';
 
-        // Ensure all text spans in details box are visible and never clipped
+        // Normalize all text spans: use lineHeight 1.3 matching the IdCard source
         const allSpans = detailsBox.querySelectorAll<HTMLElement>('span');
         allSpans.forEach((s) => {
           s.style.overflow = 'visible';
           s.style.textOverflow = 'clip';
           s.style.whiteSpace = 'nowrap';
-          s.style.lineHeight = '1.25';
+          s.style.lineHeight = '1.3';
           s.style.display = 'inline-block';
         });
 
-        // Ensure left column is TOP-ALIGNED as requested
+        // Left column: use space-around distribution so 3 rows are evenly spaced and never overflow
         const leftCol = detailsBox.firstElementChild as HTMLElement;
         if (leftCol) {
           leftCol.style.display = 'flex';
           leftCol.style.flexDirection = 'column';
-          leftCol.style.justifyContent = 'flex-start';
+          leftCol.style.justifyContent = 'space-around';
+          leftCol.style.alignItems = 'flex-start';
           leftCol.style.height = '100%';
-          leftCol.style.paddingTop = '1px';
-          leftCol.style.paddingBottom = '1px';
-          leftCol.style.paddingLeft = '0';
-          leftCol.style.paddingRight = '0';
+          leftCol.style.padding = '0';
           leftCol.style.margin = '0';
+          leftCol.style.gap = '0';
 
+          // Clear any row-level margins from previous passes
           const rows = Array.from(leftCol.children) as HTMLElement[];
-          rows.forEach((row, idx) => {
-            if (idx < rows.length - 1) {
-              row.style.marginBottom = '5px';
-            }
+          rows.forEach((row) => {
+            row.style.margin = '0';
           });
         }
       }

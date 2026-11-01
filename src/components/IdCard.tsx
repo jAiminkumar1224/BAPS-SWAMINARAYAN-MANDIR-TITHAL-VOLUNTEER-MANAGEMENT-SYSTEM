@@ -162,10 +162,9 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
             boxSizing: 'border-box',
           }}
         >
-          {/* Left Column: 3 Detail Rows (Mobile, Village, Kshetra) - top aligned */}
+          {/* Left Column: 3 Detail Rows (Mobile, Village, Kshetra) - evenly distributed */}
           <div
-            className="flex-1 h-full flex flex-col justify-start gap-2 pr-2.5 min-w-0"
-            style={{ paddingTop: '1px', paddingBottom: '1px' }}
+            className="flex-1 h-full flex flex-col justify-around pr-2.5 min-w-0"
           >
             {/* Line 1: Mobile - overflow-visible & whitespace-nowrap so digits are NEVER clipped */}
             <div className="flex items-center min-w-0">

@@ -147,17 +147,17 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         {/* Line 1: Mobile Number — aligned after pre-printed 'મોબાઇલ :' at Y: 78.71% */}
         <div
           data-card-mobile="true"
-          className="absolute z-10 flex items-center select-text"
+          className="absolute z-10 flex items-center select-text overflow-visible"
           style={{
             top: '78.71%',
-            left: '24.5%',
-            width: '48.5%',
-            height: '3.6%',
+            left: '25.0%',
+            width: '48.0%',
+            height: '28px',
             transform: 'translateY(-50%)',
           }}
         >
           <span
-            className="font-extrabold text-white text-[13.5px] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis"
+            className="font-extrabold text-white text-[13.5px] tracking-wide whitespace-nowrap overflow-visible select-text"
             style={{
               fontFamily: "'Noto Sans Gujarati', sans-serif",
               lineHeight: '1.2',
@@ -170,17 +170,17 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         {/* Line 2: Village Name — aligned after pre-printed 'ગામ :' at Y: 83.00% */}
         <div
           data-card-village="true"
-          className="absolute z-10 flex items-center select-text"
+          className="absolute z-10 flex items-center select-text overflow-visible"
           style={{
             top: '83.00%',
-            left: '24.5%',
-            width: '48.5%',
-            height: '3.6%',
+            left: '25.0%',
+            width: '48.0%',
+            height: '28px',
             transform: 'translateY(-50%)',
           }}
         >
           <span
-            className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-hidden text-ellipsis"
+            className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-visible select-text"
             style={{
               fontFamily: "'Noto Sans Gujarati', sans-serif",
               letterSpacing: 'normal',
@@ -194,17 +194,17 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         {/* Line 3: Area (Kshetra) — aligned after pre-printed 'ક્ષેત્ર :' at Y: 87.01% */}
         <div
           data-card-kshetra="true"
-          className="absolute z-10 flex items-center select-text"
+          className="absolute z-10 flex items-center select-text overflow-visible"
           style={{
             top: '87.01%',
-            left: '24.5%',
-            width: '48.5%',
-            height: '3.6%',
+            left: '25.0%',
+            width: '48.0%',
+            height: '28px',
             transform: 'translateY(-50%)',
           }}
         >
           <span
-            className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-hidden text-ellipsis"
+            className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-visible select-text"
             style={{
               fontFamily: "'Noto Sans Gujarati', sans-serif",
               letterSpacing: 'normal',
@@ -237,16 +237,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         </div>
 
         {/* 5. DYNAMIC SEVA VIBHAG IN BOTTOM SECTION */}
-        {/* Optical center: X: 50.0%, Y: 94.68% */}
+        {/* Positioned exactly 5mm (5.0%) below the blue box (which ends at 88.4%) */}
+        {/* Top of title: 88.4% + 5.0% = 93.4% */}
         <div
           data-card-vibhag-box="true"
-          className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
+          className="absolute z-10 flex items-start justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '94.68%',
+            top: '93.4%',
             left: '50.0%',
             width: '92.0%',
-            height: '6.5%',
-            transform: 'translate(-50%, -50%)',
+            transform: 'translateX(-50%)',
           }}
         >
           <span

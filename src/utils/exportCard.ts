@@ -122,39 +122,34 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
         }
       }
 
-      // 3. Dynamic Values (Mobile, Village, Kshetra) — aligned to pre-printed labels
-      const mobileBox = clonedElement.querySelector<HTMLElement>('[data-card-mobile="true"]');
-      if (mobileBox) {
-        mobileBox.style.transform = 'none';
-        mobileBox.style.top = '76.9%';
-        mobileBox.style.left = '24.5%';
-        mobileBox.style.width = '48.5%';
-        mobileBox.style.height = '3.6%';
-        mobileBox.style.display = 'flex';
-        mobileBox.style.alignItems = 'center';
-      }
+      // 3. Dynamic Values (Mobile, Village, Kshetra) — aligned to pre-printed labels with full height & no clipping
+      const styleDetailBox = (box: HTMLElement | null, topPercent: string) => {
+        if (!box) return;
+        box.style.transform = 'none';
+        box.style.top = topPercent;
+        box.style.left = '25.0%';
+        box.style.width = '48.0%';
+        box.style.height = '28px';
+        box.style.overflow = 'visible';
+        box.style.display = 'flex';
+        box.style.alignItems = 'center';
 
-      const villageBox = clonedElement.querySelector<HTMLElement>('[data-card-village="true"]');
-      if (villageBox) {
-        villageBox.style.transform = 'none';
-        villageBox.style.top = '81.2%';
-        villageBox.style.left = '24.5%';
-        villageBox.style.width = '48.5%';
-        villageBox.style.height = '3.6%';
-        villageBox.style.display = 'flex';
-        villageBox.style.alignItems = 'center';
-      }
+        const span = box.querySelector<HTMLElement>('span');
+        if (span) {
+          span.style.overflow = 'visible';
+          span.style.textOverflow = 'clip';
+          span.style.whiteSpace = 'nowrap';
+          span.style.lineHeight = '1.2';
+          span.style.display = 'inline-block';
+          span.style.margin = '0';
+          span.style.padding = '0';
+        }
+      };
 
-      const kshetraBox = clonedElement.querySelector<HTMLElement>('[data-card-kshetra="true"]');
-      if (kshetraBox) {
-        kshetraBox.style.transform = 'none';
-        kshetraBox.style.top = '85.2%';
-        kshetraBox.style.left = '24.5%';
-        kshetraBox.style.width = '48.5%';
-        kshetraBox.style.height = '3.6%';
-        kshetraBox.style.display = 'flex';
-        kshetraBox.style.alignItems = 'center';
-      }
+      // Exact centers at 78.71%, 83.00%, 87.01%. Box height = 28px (~5.46%): top = center - 2.73%
+      styleDetailBox(clonedElement.querySelector<HTMLElement>('[data-card-mobile="true"]'), '76.0%');
+      styleDetailBox(clonedElement.querySelector<HTMLElement>('[data-card-village="true"]'), '80.3%');
+      styleDetailBox(clonedElement.querySelector<HTMLElement>('[data-card-kshetra="true"]'), '84.3%');
 
       // 4. QR Code Box — inside pre-printed white square
       const qrBox = clonedElement.querySelector<HTMLElement>('[data-card-qr-box="true"]');
@@ -166,16 +161,17 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
         qrBox.style.height = '9.96%';
       }
 
-      // 5. Seva Vibhag Text — optical center at 94.68%
+      // 5. Seva Vibhag Text — positioned exactly 5mm below the blue box (which ends at 88.4%)
+      // Top of title = 88.4% + 5.0% = 93.4%
       const vibhagBox = clonedElement.querySelector<HTMLElement>('[data-card-vibhag-box="true"]');
       if (vibhagBox) {
         vibhagBox.style.transform = 'none';
-        vibhagBox.style.top = '91.4%';
+        vibhagBox.style.top = '93.4%';
         vibhagBox.style.left = '4.0%';
         vibhagBox.style.width = '92.0%';
-        vibhagBox.style.height = '6.5%';
+        vibhagBox.style.height = 'auto';
         vibhagBox.style.display = 'flex';
-        vibhagBox.style.alignItems = 'center';
+        vibhagBox.style.alignItems = 'flex-start';
         vibhagBox.style.justifyContent = 'center';
         vibhagBox.style.padding = '0';
         vibhagBox.style.margin = '0';
@@ -183,7 +179,7 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
         if (vibhagSpan) {
           vibhagSpan.style.display = 'inline-block';
           vibhagSpan.style.lineHeight = '1';
-          vibhagSpan.style.verticalAlign = 'middle';
+          vibhagSpan.style.verticalAlign = 'top';
           vibhagSpan.style.margin = '0';
           vibhagSpan.style.padding = '0';
         }

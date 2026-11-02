@@ -27,12 +27,14 @@ const waitForImages = async (element: HTMLElement): Promise<void> => {
  * - In onclone (PDF/PNG generator):
  *   Neutralizes CSS translate transforms and explicitly positions the cloned elements
  *   so that the captured export visually matches the website preview 100%.
- * - Sets exact scale multiplier (3x) for 300 DPI (1134 × 1536 px).
+ * - Sets scale multiplier (4x) for 300+ DPI (1512 × 2048 px) print-ready quality.
  */
 export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCanvasElement> => {
   // 1. Wait for web fonts (Noto Sans Gujarati) and all card images to finish loading
   if (typeof document !== 'undefined' && document.fonts) {
     try {
+      await document.fonts.load('800 14px "Noto Sans Gujarati"');
+      await document.fonts.load('900 27px "Noto Sans Gujarati"');
       await document.fonts.ready;
     } catch {
       // Continue if font ready check fails
@@ -40,13 +42,13 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
   }
   await waitForImages(element);
 
-  // 2. Use canonical element bounds (378 x 512, matching 756 x 1024 template) to avoid modal scale skew
+  // 2. Canonical element bounds (378 x 512, matching 74mm x 100mm physical aspect ratio)
   const width = 378;
   const height = 512;
 
-  // 3. Render high-res canvas via html2canvas
+  // 3. Render high-res canvas via html2canvas at scale 4 (300+ DPI print ready)
   return await html2canvas(element, {
-    scale: 3, // 300 DPI multiplier (378*3 = 1134, 512*3 = 1536)
+    scale: 4, // 4x multiplier: 378*4 = 1512, 512*4 = 2048 px (over 450 DPI at 74x100mm)
     useCORS: true,
     allowTaint: true,
     backgroundColor: '#FFFDF5',
@@ -87,16 +89,26 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       clonedElement.style.height = `${height}px`;
       clonedElement.style.margin = '0';
 
-      // PDF Generator Fix: Adjust cloned element coordinates for 100% visual parity with website
+      // ── PDF/PNG Export Fixes: Align cloned elements exactly to the new PNG layout ──
 
-      // 1. Volunteer Name: place dead-center in white box with EQUAL padding above and below
+      // 1. Circular Photo: Center X: 50.0%, Center Y: 60.89%
+      const photoBox = clonedElement.querySelector<HTMLElement>('[data-card-photo-box="true"]');
+      if (photoBox) {
+        photoBox.style.transform = 'none';
+        photoBox.style.top = '51.46%';
+        photoBox.style.left = '37.08%';
+        photoBox.style.width = '25.84%';
+        photoBox.style.height = '18.85%';
+      }
+
+      // 2. Volunteer Name: Center X: 50.0%, Center Y: 72.41% inside white rectangle
       const nameBox = clonedElement.querySelector<HTMLElement>('[data-card-name-box="true"]');
       if (nameBox) {
         nameBox.style.transform = 'none';
-        nameBox.style.top = '62.05%';
-        nameBox.style.left = '6.0%';
-        nameBox.style.width = '88.0%';
-        nameBox.style.height = '6.5%';
+        nameBox.style.top = '68.85%';
+        nameBox.style.left = '4.0%';
+        nameBox.style.width = '92.0%';
+        nameBox.style.height = '7.1%';
         nameBox.style.display = 'flex';
         nameBox.style.alignItems = 'center';
         nameBox.style.justifyContent = 'center';
@@ -110,69 +122,58 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
         }
       }
 
-      // 2. Circular Photo: maintain exact concentric alignment
-      const photoBox = clonedElement.querySelector<HTMLElement>('[data-card-photo-box="true"]');
-      if (photoBox) {
-        photoBox.style.transform = 'none';
-        photoBox.style.top = '44.37%';
-        photoBox.style.left = '39.1%';
-        photoBox.style.width = '21.8%';
-        photoBox.style.height = '16.0%';
+      // 3. Dynamic Values (Mobile, Village, Kshetra) — aligned to pre-printed labels
+      const mobileBox = clonedElement.querySelector<HTMLElement>('[data-card-mobile="true"]');
+      if (mobileBox) {
+        mobileBox.style.transform = 'none';
+        mobileBox.style.top = '76.9%';
+        mobileBox.style.left = '24.5%';
+        mobileBox.style.width = '48.5%';
+        mobileBox.style.height = '3.6%';
+        mobileBox.style.display = 'flex';
+        mobileBox.style.alignItems = 'center';
       }
 
-      // 3. Details Blue Box: match website layout exactly using justify-around for even row spacing
-      const detailsBox = clonedElement.querySelector<HTMLElement>('[data-card-details-box="true"]');
-      if (detailsBox) {
-        detailsBox.style.transform = 'none';
-        // Raised top slightly and increased height to fully cover the template's blue box area
-        // and prevent the kshetra (3rd) row from overflowing out of the box bottom edge
-        detailsBox.style.top = '67.5%';
-        detailsBox.style.left = '2.8%';
-        detailsBox.style.width = '94.4%';
-        detailsBox.style.height = '19.5%';
-        detailsBox.style.boxSizing = 'border-box';
-        detailsBox.style.padding = '6px 10px 6px 12px';
-        detailsBox.style.overflow = 'hidden';
-
-        // Normalize all text spans: use lineHeight 1.2 (tighter) so 3 rows fit comfortably
-        const allSpans = detailsBox.querySelectorAll<HTMLElement>('span');
-        allSpans.forEach((s) => {
-          s.style.overflow = 'visible';
-          s.style.textOverflow = 'clip';
-          s.style.whiteSpace = 'nowrap';
-          s.style.lineHeight = '1.2';
-          s.style.display = 'inline-block';
-        });
-
-        // Left column: use space-around distribution so 3 rows are evenly spaced and never overflow
-        const leftCol = detailsBox.firstElementChild as HTMLElement;
-        if (leftCol) {
-          leftCol.style.display = 'flex';
-          leftCol.style.flexDirection = 'column';
-          leftCol.style.justifyContent = 'space-around';
-          leftCol.style.alignItems = 'flex-start';
-          leftCol.style.height = '100%';
-          leftCol.style.padding = '0';
-          leftCol.style.margin = '0';
-          leftCol.style.gap = '0';
-
-          // Clear any row-level margins from previous passes
-          const rows = Array.from(leftCol.children) as HTMLElement[];
-          rows.forEach((row) => {
-            row.style.margin = '0';
-          });
-        }
+      const villageBox = clonedElement.querySelector<HTMLElement>('[data-card-village="true"]');
+      if (villageBox) {
+        villageBox.style.transform = 'none';
+        villageBox.style.top = '81.2%';
+        villageBox.style.left = '24.5%';
+        villageBox.style.width = '48.5%';
+        villageBox.style.height = '3.6%';
+        villageBox.style.display = 'flex';
+        villageBox.style.alignItems = 'center';
       }
 
-      // 4. Seva Vibhag: Positioned to match website preview exactly (text optical center at 91.0%)
-      // top adjusted down slightly since details box now starts at 67.5% with height 19.5% (ends at 87%)
+      const kshetraBox = clonedElement.querySelector<HTMLElement>('[data-card-kshetra="true"]');
+      if (kshetraBox) {
+        kshetraBox.style.transform = 'none';
+        kshetraBox.style.top = '85.2%';
+        kshetraBox.style.left = '24.5%';
+        kshetraBox.style.width = '48.5%';
+        kshetraBox.style.height = '3.6%';
+        kshetraBox.style.display = 'flex';
+        kshetraBox.style.alignItems = 'center';
+      }
+
+      // 4. QR Code Box — inside pre-printed white square
+      const qrBox = clonedElement.querySelector<HTMLElement>('[data-card-qr-box="true"]');
+      if (qrBox) {
+        qrBox.style.transform = 'none';
+        qrBox.style.top = '77.54%';
+        qrBox.style.left = '74.01%';
+        qrBox.style.width = '14.89%';
+        qrBox.style.height = '9.96%';
+      }
+
+      // 5. Seva Vibhag Text — optical center at 94.68%
       const vibhagBox = clonedElement.querySelector<HTMLElement>('[data-card-vibhag-box="true"]');
       if (vibhagBox) {
         vibhagBox.style.transform = 'none';
-        vibhagBox.style.top = '88.5%';
+        vibhagBox.style.top = '91.4%';
         vibhagBox.style.left = '4.0%';
         vibhagBox.style.width = '92.0%';
-        vibhagBox.style.height = '6.0%';
+        vibhagBox.style.height = '6.5%';
         vibhagBox.style.display = 'flex';
         vibhagBox.style.alignItems = 'center';
         vibhagBox.style.justifyContent = 'center';
@@ -195,7 +196,7 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
 export const captureCardCanvas = captureVolunteerCard;
 
 /**
- * Download ID card as 300 DPI lossless PNG (1134 × 1536 px)
+ * Download ID card as 300+ DPI lossless PNG (1512 × 2048 px)
  */
 export const downloadCardAsPng = async (element: HTMLElement, filename = 'BAPS-ID-Card.png') => {
   try {
@@ -220,7 +221,6 @@ export const downloadCardAsPng = async (element: HTMLElement, filename = 'BAPS-I
 export const downloadCardAsPdf = async (element: HTMLElement, filename = 'BAPS-ID-Card.pdf') => {
   try {
     const canvas = await captureVolunteerCard(element);
-    // Use lossless PNG instead of lossy JPEG
     const imgData = canvas.toDataURL('image/png', 1.0);
 
     const pdf = new jsPDF({
@@ -293,19 +293,8 @@ export const printCard = async (element: HTMLElement) => {
   }
 };
 
-
 /**
  * 12 x 18 inch Sheet Print & Layout Specifications
- * ------------------------------------------------
- * Sheet Dimensions: 12 × 18 inches = 304.8 × 457.2 mm
- * Inner Layout Box: 11.5 × 17.5 inches = 292.1 × 444.5 mm (0.25 in / 6.35 mm margins)
- * Card Dimensions:  74 × 100 mm
- * Spacing / Gap:    2 mm
- * Capacity:         12 cards per page (3 columns × 4 rows)
- * Total Grid Width: 3 × 74 + 2 × 2 = 226 mm (< 292.1 mm)
- * Total Grid Height: 4 × 100 + 3 × 2 = 406 mm (< 444.5 mm)
- * Horizontal Margin: (304.8 - 226) / 2 = 39.4 mm (> 6.35 mm)
- * Vertical Margin:   (457.2 - 406) / 2 = 25.6 mm (> 6.35 mm)
  */
 export const SHEET_12X18_WIDTH_MM = 304.8;
 export const SHEET_12X18_HEIGHT_MM = 457.2;
@@ -352,8 +341,6 @@ export const create12x18BatchPdf = (): jsPDF => {
     compress: false,
   });
 
-  // Print Scaling Protection: Explicitly set /PrintScaling /None in PDF viewer preferences
-  // Ensures Adobe Acrobat, browser PDF viewers, and print dialogs default to 100% / Actual Size
   if (typeof (pdf as any).viewerPreferences === 'function') {
     (pdf as any).viewerPreferences({ PrintScaling: 'None' }, true);
   }
@@ -363,8 +350,6 @@ export const create12x18BatchPdf = (): jsPDF => {
 
 /**
  * Adds an ID card to the 12x18 inch sheet PDF at its exact grid position.
- * Preserves exact 74 x 100 mm card dimensions and 2 mm gaps.
- * On the final page, remaining cards stay at their fixed slot positions without stretching.
  */
 export const addCardTo12x18BatchPdf = (
   pdf: jsPDF,
@@ -373,20 +358,16 @@ export const addCardTo12x18BatchPdf = (
 ) => {
   const slotIndex = cardIndex % CARDS_PER_PAGE;
 
-  // Add new 12x18 page when starting a new page beyond page 1
   if (cardIndex > 0 && slotIndex === 0) {
     pdf.addPage([SHEET_12X18_WIDTH_MM, SHEET_12X18_HEIGHT_MM], 'portrait');
   }
 
-  // Calculate 3-column x 4-row grid placement
   const col = slotIndex % GRID_COLS;
   const row = Math.floor(slotIndex / GRID_COLS);
 
-  // Exact coordinates: 39.4mm left margin, 25.6mm top margin, 2mm gaps
   const x = START_X_MM + col * (CARD_WIDTH_MM + CARD_GAP_MM);
   const y = START_Y_MM + row * (CARD_HEIGHT_MM + CARD_GAP_MM);
 
-  // Embed lossless PNG at exact physical measurements (74mm x 100mm)
   pdf.addImage(
     imgData,
     'PNG',

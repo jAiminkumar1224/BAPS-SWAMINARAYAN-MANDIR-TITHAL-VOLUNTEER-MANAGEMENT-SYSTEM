@@ -29,10 +29,8 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
     ref
   ) => {
     // Canonical Production Base URL for Verification QR Code
-    // Ensures physical printed/downloaded cards always verify globally from any phone camera
     const canonicalProductionUrl = 'https://baps-tithal-svayamsevakdal.netlify.app';
     const rawUrl = appUrl || import.meta.env.VITE_APP_URL || canonicalProductionUrl;
-    // Guard against legacy broken URLs (e.g. baps-tithal.netlify.app) or localhost in exported cards
     const baseUrl =
       rawUrl.includes('baps-tithal.netlify.app') || rawUrl.includes('localhost')
         ? canonicalProductionUrl
@@ -50,7 +48,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
       return 'text-[21px]';
     };
 
-    // Standardized typography for Seva Vibhag at bottom (+1 font size increase)
+    // Standardized typography for Seva Vibhag at bottom
     const getVibhagFontSize = (text: string) => {
       const len = text ? text.length : 0;
       if (len > 24) return 'text-[19.5px]';
@@ -71,32 +69,32 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         }`}
         style={{
           boxSizing: 'border-box',
-          aspectRatio: '756 / 1024',
+          aspectRatio: '74 / 100',
         }}
       >
-        {/* BACKGROUND TEMPLATE IMAGE (756 × 1024 lossless PNG) */}
+        {/* SINGLE HIGH-RESOLUTION PNG TEMPLATE BACKGROUND */}
         <img
-          src="/id-template.png"
+          src="/Main ID Card BG.png"
           alt="BAPS Tithal ID Card Template"
-          className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
+          className="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none"
           crossOrigin="anonymous"
           style={{ imageRendering: '-webkit-optimize-contrast' }}
         />
 
-        {/* 1. CENTERED CIRCULAR VOLUNTEER PHOTO */}
-        {/* Exact concentric geometric center: X: 50.0%, Y: 52.37% */}
+        {/* 1. DYNAMIC PROFILE PHOTO INSIDE CIRCULAR PLACEHOLDER */}
+        {/* Exact measured center: X: 50.0%, Y: 60.89%, Width: 25.84%, Height: 18.85% */}
         <div
           data-card-photo-box="true"
           className="absolute z-10 flex items-center justify-center pointer-events-none"
           style={{
-            top: '52.37%',
+            top: '60.89%',
             left: '50.0%',
-            width: '21.8%',
-            height: '16.0%',
+            width: '25.84%',
+            height: '18.85%',
             transform: 'translate(-50%, -50%)',
           }}
         >
-          <div className="w-full h-full rounded-full overflow-hidden bg-[#0A2E5C] border-[2.5px] border-white flex items-center justify-center shadow-md">
+          <div className="w-full h-full rounded-full overflow-hidden bg-[#08456D] border-[2px] border-white flex items-center justify-center shadow-md">
             {photoUrl ? (
               <img
                 src={photoUrl}
@@ -119,16 +117,16 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </div>
         </div>
 
-        {/* 2. VOLUNTEER NAME (IN THE PROMINENT WHITE BOX BELOW PHOTO) */}
-        {/* Preserves exact optical center for website preview */}
+        {/* 2. DYNAMIC MEMBER NAME INSIDE WHITE RECTANGLE PLACEHOLDER */}
+        {/* Exact measured center: X: 50.0%, Y: 72.41%, Width: 92.26%, Height: 7.13% */}
         <div
           data-card-name-box="true"
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '65.30%',
+            top: '72.41%',
             left: '50.0%',
-            width: '88.0%',
-            height: '6.5%',
+            width: '92.0%',
+            height: '7.1%',
             transform: 'translate(-50%, -50%)',
           }}
         >
@@ -145,129 +143,109 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           </span>
         </div>
 
-        {/* 3. PERSONAL DETAILS BLUE BOX (3 LINES: મો., ગામ, ક્ષેત્ર + QR CODE) */}
-        {/* TASK 1: Increased 2mm on left and 2mm on right */}
-        {/* 74mm physical width => 2mm = 2.703%. Left moves from 5.5% to 2.8%, right margin from 5.5% to 2.8%, Width = 94.4% */}
-        {/* Solid #00366C background completely covers the pre-printed box, labels and QR code */}
-        {/* The 2 dots (:) are dedicated elements with identical width, perfectly locked in a single straight vertical line */}
-        {/* top/height matched to exportCard.ts onclone values for pixel-perfect PDF parity */}
+        {/* 3. DYNAMIC DETAILS: NO DUPLICATE BOX, LABELS ARE PRE-PRINTED IN PNG */}
+        {/* Line 1: Mobile Number — aligned after pre-printed 'મોબાઇલ :' at Y: 78.71% */}
         <div
-          data-card-details-box="true"
-          className="absolute z-10 rounded-xl border-[2px] border-white flex items-center justify-between p-2.5 shadow-md"
+          data-card-mobile="true"
+          className="absolute z-10 flex items-center select-text"
           style={{
-            top: '67.5%',
-            left: '2.8%',
-            width: '94.4%',
-            height: '19.5%',
-            backgroundColor: '#00366C',
-            boxSizing: 'border-box',
+            top: '78.71%',
+            left: '24.5%',
+            width: '48.5%',
+            height: '3.6%',
+            transform: 'translateY(-50%)',
           }}
         >
-          {/* Left Column: 3 Detail Rows (Mobile, Village, Kshetra) - evenly distributed */}
-          <div
-            className="flex-1 h-full flex flex-col justify-around pr-2.5 min-w-0"
+          <span
+            className="font-extrabold text-white text-[13.5px] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis"
+            style={{
+              fontFamily: "'Noto Sans Gujarati', sans-serif",
+              lineHeight: '1.2',
+            }}
           >
-            {/* Line 1: Mobile - overflow-visible & whitespace-nowrap so digits are NEVER clipped */}
-            <div className="flex items-center min-w-0">
-              <span
-                className="font-extrabold text-white text-[13.5px] tracking-wide shrink-0 w-[36px]"
-                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-              >
-                મો.
-              </span>
-              <span
-                className="font-extrabold text-white text-[13.5px] shrink-0 w-[12px] text-center mr-1.5"
-                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-              >
-                :
-              </span>
-              <span
-                className="font-extrabold text-white text-[13.5px] tracking-wide whitespace-nowrap overflow-visible select-text"
-                style={{
-                  fontFamily: "'Noto Sans Gujarati', sans-serif",
-                  lineHeight: '1.3',
-                }}
-              >
-                {mobileNumber || '—'}
-              </span>
-            </div>
-
-            {/* Line 2: Village - overflow-visible & whitespace-nowrap so Gujarati/English descenders are NEVER cut */}
-            <div className="flex items-center min-w-0">
-              <span
-                className="font-extrabold text-white text-[13.5px] tracking-wide shrink-0 w-[36px]"
-                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-              >
-                ગામ
-              </span>
-              <span
-                className="font-extrabold text-white text-[13.5px] shrink-0 w-[12px] text-center mr-1.5"
-                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-              >
-                :
-              </span>
-              <span
-                className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-visible select-text"
-                style={{
-                  fontFamily: "'Noto Sans Gujarati', sans-serif",
-                  letterSpacing: 'normal',
-                  lineHeight: '1.3',
-                }}
-              >
-                {villageName || '—'}
-              </span>
-            </div>
-
-            {/* Line 3: Kshetra - overflow-visible & whitespace-nowrap so Gujarati/English descenders are NEVER cut */}
-            <div className="flex items-center min-w-0">
-              <span
-                className="font-extrabold text-white text-[13.5px] tracking-wide shrink-0 w-[36px]"
-                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-              >
-                ક્ષેત્ર
-              </span>
-              <span
-                className="font-extrabold text-white text-[13.5px] shrink-0 w-[12px] text-center mr-1.5"
-                style={{ fontFamily: "'Noto Sans Gujarati', sans-serif" }}
-              >
-                :
-              </span>
-              <span
-                className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-visible select-text"
-                style={{
-                  fontFamily: "'Noto Sans Gujarati', sans-serif",
-                  letterSpacing: 'normal',
-                  lineHeight: '1.3',
-                }}
-              >
-                {xetraName || '—'}
-              </span>
-            </div>
-          </div>
-
-          {/* Right Column: Dynamic QR Code Container */}
-          <div className="shrink-0 h-full aspect-square flex items-center justify-center p-1 bg-white rounded-lg shadow-sm">
-            <QRCodeSVG
-              value={verificationUrl}
-              size={120}
-              level="M"
-              includeMargin={false}
-              className="w-full h-full object-contain"
-            />
-          </div>
+            {mobileNumber || '—'}
+          </span>
         </div>
 
-        {/* 4. DYNAMIC SEVA VIBHAG */}
-        {/* Optical center: X: 50.0%, Y: 91.5% - Perfectly balanced below blue details box and above bottom edge */}
-        {/* Details box ends at 87% (67.5% + 19.5%). Vibhag centered at 91.5% gives 4.5% breathing room above */}
+        {/* Line 2: Village Name — aligned after pre-printed 'ગામ :' at Y: 83.00% */}
+        <div
+          data-card-village="true"
+          className="absolute z-10 flex items-center select-text"
+          style={{
+            top: '83.00%',
+            left: '24.5%',
+            width: '48.5%',
+            height: '3.6%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <span
+            className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-hidden text-ellipsis"
+            style={{
+              fontFamily: "'Noto Sans Gujarati', sans-serif",
+              letterSpacing: 'normal',
+              lineHeight: '1.2',
+            }}
+          >
+            {villageName || '—'}
+          </span>
+        </div>
+
+        {/* Line 3: Area (Kshetra) — aligned after pre-printed 'ક્ષેત્ર :' at Y: 87.01% */}
+        <div
+          data-card-kshetra="true"
+          className="absolute z-10 flex items-center select-text"
+          style={{
+            top: '87.01%',
+            left: '24.5%',
+            width: '48.5%',
+            height: '3.6%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <span
+            className="font-extrabold text-white text-[13.5px] whitespace-nowrap overflow-hidden text-ellipsis"
+            style={{
+              fontFamily: "'Noto Sans Gujarati', sans-serif",
+              letterSpacing: 'normal',
+              lineHeight: '1.2',
+            }}
+          >
+            {xetraName || '—'}
+          </span>
+        </div>
+
+        {/* 4. DYNAMIC QR CODE INSIDE PRE-PRINTED WHITE SQUARE PLACEHOLDER */}
+        {/* Exact measured bounds: Left: 74.01%, Top: 77.54%, Width: 14.89%, Height: 9.96% */}
+        <div
+          data-card-qr-box="true"
+          className="absolute z-10 flex items-center justify-center p-0.5"
+          style={{
+            top: '77.54%',
+            left: '74.01%',
+            width: '14.89%',
+            height: '9.96%',
+          }}
+        >
+          <QRCodeSVG
+            value={verificationUrl}
+            size={120}
+            level="M"
+            includeMargin={false}
+            className="w-full h-full object-contain"
+          />
+        </div>
+
+        {/* 5. DYNAMIC SEVA VIBHAG IN BOTTOM SECTION */}
+        {/* Optical center: X: 50.0%, Y: 94.68% */}
         <div
           data-card-vibhag-box="true"
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '91.5%',
+            top: '94.68%',
             left: '50.0%',
             width: '92.0%',
-            height: '6.0%',
+            height: '6.5%',
             transform: 'translate(-50%, -50%)',
           }}
         >

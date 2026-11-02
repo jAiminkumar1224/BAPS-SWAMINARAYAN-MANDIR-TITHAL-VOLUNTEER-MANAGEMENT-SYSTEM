@@ -149,10 +149,10 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           data-card-mobile="true"
           className="absolute z-10 flex items-center select-text overflow-visible"
           style={{
-            top: '78.71%',
+            top: '78.86%',
             left: '25.0%',
             width: '48.0%',
-            height: '28px',
+            height: '24px',
             transform: 'translateY(-50%)',
           }}
         >
@@ -172,10 +172,10 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           data-card-village="true"
           className="absolute z-10 flex items-center select-text overflow-visible"
           style={{
-            top: '83.00%',
+            top: '82.96%',
             left: '25.0%',
             width: '48.0%',
-            height: '28px',
+            height: '24px',
             transform: 'translateY(-50%)',
           }}
         >
@@ -199,7 +199,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
             top: '87.01%',
             left: '25.0%',
             width: '48.0%',
-            height: '28px',
+            height: '24px',
             transform: 'translateY(-50%)',
           }}
         >
@@ -223,8 +223,8 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           style={{
             top: '77.54%',
             left: '74.01%',
-            width: '14.89%',
-            height: '9.96%',
+            width: '15.04%',
+            height: '10.06%',
           }}
         >
           <QRCodeSVG
@@ -243,7 +243,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           data-card-vibhag-box="true"
           className="absolute z-10 flex items-start justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '93.4%',
+            top: '91.5%',
             left: '50.0%',
             width: '92.0%',
             transform: 'translateX(-50%)',

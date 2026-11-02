@@ -129,7 +129,7 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
         box.style.top = topPercent;
         box.style.left = '25.0%';
         box.style.width = '48.0%';
-        box.style.height = '28px';
+        box.style.height = '24px';
         box.style.overflow = 'visible';
         box.style.display = 'flex';
         box.style.alignItems = 'center';
@@ -147,9 +147,9 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       };
 
       // Exact centers at 78.71%, 83.00%, 87.01%. Box height = 28px (~5.46%): top = center - 2.73%
-      styleDetailBox(clonedElement.querySelector<HTMLElement>('[data-card-mobile="true"]'), '76.0%');
-      styleDetailBox(clonedElement.querySelector<HTMLElement>('[data-card-village="true"]'), '80.3%');
-      styleDetailBox(clonedElement.querySelector<HTMLElement>('[data-card-kshetra="true"]'), '84.3%');
+      styleDetailBox(clonedElement.querySelector<HTMLElement>('[data-card-mobile="true"]'), '74.7%');
+      styleDetailBox(clonedElement.querySelector<HTMLElement>('[data-card-village="true"]'), '78.6%');
+      styleDetailBox(clonedElement.querySelector<HTMLElement>('[data-card-kshetra="true"]'), '82.7%');
 
       // 4. QR Code Box — inside pre-printed white square
       const qrBox = clonedElement.querySelector<HTMLElement>('[data-card-qr-box="true"]');
@@ -157,8 +157,8 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
         qrBox.style.transform = 'none';
         qrBox.style.top = '77.54%';
         qrBox.style.left = '74.01%';
-        qrBox.style.width = '14.89%';
-        qrBox.style.height = '9.96%';
+        qrBox.style.width = '15.04%';
+        qrBox.style.height = '10.06%';
       }
 
       // 5. Seva Vibhag Text — positioned exactly 5mm below the blue box (which ends at 88.4%)
@@ -166,7 +166,7 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       const vibhagBox = clonedElement.querySelector<HTMLElement>('[data-card-vibhag-box="true"]');
       if (vibhagBox) {
         vibhagBox.style.transform = 'none';
-        vibhagBox.style.top = '93.4%';
+        vibhagBox.style.top = '91.5%';
         vibhagBox.style.left = '4.0%';
         vibhagBox.style.width = '92.0%';
         vibhagBox.style.height = 'auto';

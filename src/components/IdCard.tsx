@@ -74,12 +74,11 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           aspectRatio: '756 / 1024',
         }}
       >
-        {/* BACKGROUND TEMPLATE IMAGE (685 × 1024 lossless PNG — no JPEG artefacts) */}
-        {/* object-cover object-top: anchors to top, slight bottom crop — matches canvas renderer */}
+        {/* BACKGROUND TEMPLATE IMAGE (756 × 1024 lossless PNG) */}
         <img
           src="/id-template.png"
           alt="BAPS Tithal ID Card Template"
-          className="absolute inset-0 w-full h-full object-cover object-top z-0 pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
           crossOrigin="anonymous"
           style={{ imageRendering: '-webkit-optimize-contrast' }}
         />
@@ -97,7 +96,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
             transform: 'translate(-50%, -50%)',
           }}
         >
-          <div className="w-full h-full rounded-full overflow-hidden bg-[#0A2E5C] flex items-center justify-center shadow-inner">
+          <div className="w-full h-full rounded-full overflow-hidden bg-[#0A2E5C] border-[2.5px] border-white flex items-center justify-center shadow-md">
             {photoUrl ? (
               <img
                 src={photoUrl}

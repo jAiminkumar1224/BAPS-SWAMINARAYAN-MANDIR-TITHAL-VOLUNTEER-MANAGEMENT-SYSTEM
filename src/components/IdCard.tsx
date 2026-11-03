@@ -126,10 +126,10 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           data-card-name-box="true"
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '71.19%',
+            top: '73.34%',
             left: '50.0%',
             width: '91.24%',
-            height: '9.57%',
+            height: '5.28%',
             transform: 'translate(-50%, -50%)',
           }}
         >
@@ -237,16 +237,14 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
             includeMargin={false}
             className="w-full h-full object-contain"
           />
-        </div>
-
-        {/* 5. DYNAMIC SEVA VIBHAG IN BOTTOM SECTION */}
-        {/* Positioned exactly 5mm (5.0%) below the blue box (which ends at 88.4%) */}
-        {/* Top of title: 88.4% + 5.0% = 93.4% */}
+        </div>        {/* 5. DYNAMIC SEVA VIBHAG IN BOTTOM SECTION */}
+        {/* Positioned exactly 4mm (4.0%) below the blue box (which ends at 89.5%) */}
+        {/* Top of title: 89.5% + 4.0% = 93.5% */}
         <div
           data-card-vibhag-box="true"
           className="absolute z-10 flex items-start justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '89.5%',
+            top: '93.5%',
             left: '50.0%',
             width: '92.0%',
             transform: 'translateX(-50%)',

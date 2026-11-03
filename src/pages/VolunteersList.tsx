@@ -4,6 +4,7 @@ import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supa
 import { Volunteer, SevaVibhag } from '../types';
 import { KSHETRA_LIST } from '../constants/kshetra';
 import { DEFAULT_MOCK_SEVA_VIBHAGS, normalizeSevaVibhagName } from '../constants/sevaVibhag';
+import { VOLUNTEER_GROUPS } from '../constants/groups';
 import { IdCard } from '../components/IdCard';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -46,9 +47,10 @@ export const VolunteersList: React.FC = () => {
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDeptFilter, setSelectedDeptFilter] = useState('');
-  const [selectedVillageFilter, setSelectedVillageFilter] = useState('');
+  const [selectedDeptFilter, setSelectedDeptFilter] = useState('');  const [selectedVillageFilter, setSelectedVillageFilter] = useState('');
   const [selectedXetraFilter, setSelectedXetraFilter] = useState('');
+  const [selectedPhotoFilter, setSelectedPhotoFilter] = useState('');
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState('');
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -233,9 +235,7 @@ export const VolunteersList: React.FC = () => {
       vol.volunteer_id.toLowerCase().includes(q) ||
       vol.mobile_number.includes(q) ||
       vol.village_name.toLowerCase().includes(q) ||
-      vol.xetra_name.toLowerCase().includes(q);
-
-    const matchesDept =
+      vol.xetra_name.toLowerCase().includes(q);    const matchesDept =
       !selectedDeptFilter || vol.seva_vibhag_id === selectedDeptFilter;
     const matchesVillage =
       !selectedVillageFilter ||
@@ -244,7 +244,59 @@ export const VolunteersList: React.FC = () => {
       !selectedXetraFilter ||
       vol.xetra_name.toLowerCase() === selectedXetraFilter.toLowerCase();
 
-    return matchesSearch && matchesDept && matchesVillage && matchesXetra;
+    const hasPhoto = Boolean(
+      vol.photo_path &&
+        vol.photo_path.trim() !== '' &&
+        vol.photo_path !== 'null' &&
+        vol.photo_path !== 'undefined'
+    );
+    const matchesPhoto =
+      !selectedPhotoFilter ||
+      (selectedPhotoFilter === 'with_photo' && hasPhoto) ||
+      (selectedPhotoFilter === 'without_photo' && !hasPhoto);
+
+    const matchesGroup = (() => {
+      if (!selectedGroupFilter) return true;
+      if (selectedGroupFilter === 'none') {
+        return !vol.group_name && !vol.duty_start_date;
+      }
+      const grp = VOLUNTEER_GROUPS.find((g) => g.id === selectedGroupFilter);
+      if (!grp) return true;
+      if (vol.group_name) {
+        if (
+          vol.group_name === grp.name ||
+          vol.group_name === grp.gujaratiName ||
+          vol.group_name === grp.id
+        ) {
+          return true;
+        }
+        const lower = vol.group_name.toLowerCase();
+        if (
+          lower.includes(`group - ${grp.groupLetter.toLowerCase()}`) ||
+          lower.includes(`ગ્રુપ - ${grp.groupLetter.toLowerCase()}`) ||
+          lower.includes(`group ${grp.groupLetter.toLowerCase()}`) ||
+          lower.includes(`ગ્રુપ ${grp.groupLetter.toLowerCase()}`) ||
+          lower.includes(grp.groupLeaderName.toLowerCase())
+        ) {
+          return true;
+        }
+      }
+      if (vol.duty_start_date && vol.duty_end_date) {
+        if (vol.duty_start_date === grp.startDate && vol.duty_end_date === grp.endDate) {
+          return true;
+        }
+      }
+      return false;
+    })();
+
+    return (
+      matchesSearch &&
+      matchesDept &&
+      matchesVillage &&
+      matchesXetra &&
+      matchesPhoto &&
+      matchesGroup
+    );
   });
 
   // Extract unique villages and xetras for filter dropdowns
@@ -431,13 +483,11 @@ export const VolunteersList: React.FC = () => {
             નવું આઈડી કાર્ડ બનાવો
           </Link>
         </div>
-      </div>
-
-      {/* SEARCH & FILTERS BAR */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      </div>      {/* SEARCH & FILTERS BAR */}
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
           {/* Search Box */}
-          <div className="relative md:col-span-1">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
               <Search className="w-4 h-4" />
             </div>
@@ -509,7 +559,74 @@ export const VolunteersList: React.FC = () => {
               ))}
             </select>
           </div>
+
+          {/* Photo Availability Filter */}
+          <div>
+            <select
+              value={selectedPhotoFilter}
+              onChange={(e) => {
+                setSelectedPhotoFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 font-medium"
+            >
+              <option value="">તમામ ફોટો સ્થિતિ</option>
+              <option value="with_photo">📷 ફોટો ઉપલબ્ધ (With Photo)</option>
+              <option value="without_photo">❌ ફોટો બાકી (Without Photo)</option>
+            </select>
+          </div>
+
+          {/* Group Filter */}
+          <div>
+            <select
+              value={selectedGroupFilter}
+              onChange={(e) => {
+                setSelectedGroupFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-600 font-medium"
+            >
+              <option value="">તમામ ગ્રુપ</option>
+              {VOLUNTEER_GROUPS.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.gujaratiName}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+
+        {/* Active Filters Clear Bar */}
+        {(searchQuery ||
+          selectedDeptFilter ||
+          selectedVillageFilter ||
+          selectedXetraFilter ||
+          selectedPhotoFilter ||
+          selectedGroupFilter) && (
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-100 text-xs">
+            <div className="flex items-center gap-2 text-slate-600">
+              <Filter className="w-3.5 h-3.5 text-amber-600" />
+              <span>
+                ફિલ્ટર કરેલ પરિણામ: <strong className="text-slate-900 font-bold">{filteredVolunteers.length}</strong> / {volunteers.length} સ્વયંસેવકો
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedDeptFilter('');
+                setSelectedVillageFilter('');
+                setSelectedXetraFilter('');
+                setSelectedPhotoFilter('');
+                setSelectedGroupFilter('');
+                setCurrentPage(1);
+              }}
+              className="text-amber-700 hover:text-amber-900 font-bold flex items-center gap-1 hover:underline"
+            >
+              <X className="w-3.5 h-3.5" /> તમામ ફિલ્ટર સાફ કરો (Clear Filters)
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Selection Status Banner */}

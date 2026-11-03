@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { Volunteer, SevaVibhag } from '../types';
 import { KSHETRA_LIST } from '../constants/kshetra';
-import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
+import { DEFAULT_MOCK_SEVA_VIBHAGS, normalizeSevaVibhagName } from '../constants/sevaVibhag';
 import { IdCard } from '../components/IdCard';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -151,7 +151,11 @@ export const VolunteersList: React.FC = () => {
         .from('seva_vibhag')
         .select('*')
         .order('name');
-      setDepartments(deptData || []);
+      const normalizedDepts = (deptData || []).map((d: SevaVibhag) => ({
+        ...d,
+        name: normalizeSevaVibhagName(d.name),
+      }));
+      setDepartments(normalizedDepts);
 
       // Fetch Volunteers
       const { data: volData, error: volError } = await supabase
@@ -163,7 +167,16 @@ export const VolunteersList: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (!volError && volData) {
-        setVolunteers(volData as unknown as Volunteer[]);
+        const normalizedVols = (volData as any[]).map((v) => ({
+          ...v,
+          seva_vibhag: v.seva_vibhag
+            ? {
+                ...v.seva_vibhag,
+                name: normalizeSevaVibhagName(v.seva_vibhag.name),
+              }
+            : null,
+        }));
+        setVolunteers(normalizedVols as unknown as Volunteer[]);
       }
     } catch (err) {
       console.error('Error fetching volunteers list:', err);
@@ -719,7 +732,7 @@ export const VolunteersList: React.FC = () => {
                   mobileNumber={viewingVolunteer.mobile_number}
                   villageName={viewingVolunteer.village_name}
                   xetraName={viewingVolunteer.xetra_name}
-                  sevaVibhagName={viewingVolunteer.seva_vibhag?.name || 'સ્વયંસેવક દળ'}
+                  sevaVibhagName={normalizeSevaVibhagName(viewingVolunteer.seva_vibhag?.name)}
                   photoUrl={getStoragePublicUrl(viewingVolunteer.photo_path)}
                   size="full"
                 />
@@ -839,7 +852,7 @@ export const VolunteersList: React.FC = () => {
             mobileNumber={batchVolunteer.mobile_number}
             villageName={batchVolunteer.village_name}
             xetraName={batchVolunteer.xetra_name}
-            sevaVibhagName={batchVolunteer.seva_vibhag?.name || 'સ્વયંસેવક દળ'}
+            sevaVibhagName={normalizeSevaVibhagName(batchVolunteer.seva_vibhag?.name)}
             photoUrl={getStoragePublicUrl(batchVolunteer.photo_path)}
             size="full"
           />

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { SevaVibhag, Volunteer } from '../types';
 import { KSHETRA_LIST } from '../constants/kshetra';
-import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
+import { DEFAULT_MOCK_SEVA_VIBHAGS, normalizeSevaVibhagName } from '../constants/sevaVibhag';
 import { VOLUNTEER_GROUPS } from '../constants/groups';
 import { IdCard } from '../components/IdCard';
 import { PhotoCropModal } from '../components/PhotoCropModal';
@@ -79,7 +79,11 @@ export const EditVolunteer: React.FC = () => {
         .from('seva_vibhag')
         .select('*')
         .order('name');
-      setDepartments(deptData || []);
+      const normalizedDepts = (deptData || []).map((d: SevaVibhag) => ({
+        ...d,
+        name: normalizeSevaVibhagName(d.name),
+      }));
+      setDepartments(normalizedDepts);
 
       // Fetch Volunteer
       const { data: volData, error: volError } = await supabase
@@ -100,7 +104,7 @@ export const EditVolunteer: React.FC = () => {
         setVillageName(v.village_name);
         setXetraName(v.xetra_name);
         setSevaVibhagId(v.seva_vibhag_id || '');
-        setSelectedDeptName(v.seva_vibhag?.name || 'સ્વયંસેવક દળ');
+        setSelectedDeptName(normalizeSevaVibhagName(v.seva_vibhag?.name));
         const matchedGroup = VOLUNTEER_GROUPS.find(
           (g) => g.name === v.group_name || g.startDate === v.duty_start_date
         );
@@ -119,7 +123,7 @@ export const EditVolunteer: React.FC = () => {
   const handleDeptChange = (deptId: string) => {
     setSevaVibhagId(deptId);
     const found = departments.find((d) => d.id === deptId);
-    if (found) setSelectedDeptName(found.name);
+    if (found) setSelectedDeptName(normalizeSevaVibhagName(found.name));
   };
 
   const validate = (): boolean => {

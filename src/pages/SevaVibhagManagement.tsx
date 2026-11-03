@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { SevaVibhag, Volunteer } from '../types';
-import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
+import { DEFAULT_MOCK_SEVA_VIBHAGS, normalizeSevaVibhagName } from '../constants/sevaVibhag';
 import { useAuth } from '../context/AuthContext';
 import {
   Layers,
@@ -73,7 +73,11 @@ export const SevaVibhagManagement: React.FC = () => {
         .order('name');
 
       if (!deptError && deptData) {
-        setDepartments(deptData);
+        const normalized = deptData.map((d: SevaVibhag) => ({
+          ...d,
+          name: normalizeSevaVibhagName(d.name),
+        }));
+        setDepartments(normalized);
 
         // Fetch counts of volunteers assigned to each department
         const { data: volData } = await supabase

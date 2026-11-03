@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { normalizeSevaVibhagName } from '../constants/sevaVibhag';
 
 export interface IdCardProps {
   volunteerId: string;
@@ -37,6 +38,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         : rawUrl;
 
     const cleanVolunteerId = (volunteerId || 'BAPS-74930-TNL').trim();
+    const cleanVibhagName = normalizeSevaVibhagName(sevaVibhagName);
     const verificationUrl = `${baseUrl.replace(/\/$/, '')}/verify/${cleanVolunteerId}`;
 
     // Standardized typography for Volunteer Name
@@ -124,10 +126,10 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           data-card-name-box="true"
           className="absolute z-10 flex items-center justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '72.41%',
+            top: '71.19%',
             left: '50.0%',
-            width: '92.0%',
-            height: '7.1%',
+            width: '91.24%',
+            height: '9.57%',
             transform: 'translate(-50%, -50%)',
           }}
         >
@@ -251,9 +253,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           }}
         >
           <span
-            className={`font-black tracking-wider text-[#063D69] text-center leading-none whitespace-nowrap overflow-visible ${getVibhagFontSize(
-              sevaVibhagName || 'સ્વયંસેવક દળ'
-            )}`}
+            className={`font-black tracking-wider text-[#063D69] text-center leading-none whitespace-nowrap overflow-visible ${getVibhagFontSize(cleanVibhagName)}`}
             style={{
               fontFamily: "'Noto Sans Gujarati', sans-serif",
               lineHeight: '1',
@@ -261,7 +261,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
               padding: 0,
             }}
           >
-            {sevaVibhagName || 'સ્વયંસેવક દળ'}
+            {cleanVibhagName}
           </span>
         </div>
       </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { Volunteer, SevaVibhag } from '../types';
-import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
+import { DEFAULT_MOCK_SEVA_VIBHAGS, normalizeSevaVibhagName } from '../constants/sevaVibhag';
 import { useAuth } from '../context/AuthContext';
 import {
   CreditCard,
@@ -341,7 +341,7 @@ export const Dashboard: React.FC = () => {
                         {vol.volunteer_id}
                       </span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold truncate max-w-[100px]">
-                        {vol.seva_vibhag?.name || 'સ્વયંસેવક દળ'}
+                        {normalizeSevaVibhagName(vol.seva_vibhag?.name)}
                       </span>
                     </div>
                     <h4 className="font-extrabold text-sm text-slate-900 truncate mt-0.5">

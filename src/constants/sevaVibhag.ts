@@ -10,7 +10,7 @@ export const SEVA_VIBHAG_LIST = [
   'ઉતારા વિભાગ',
   'ડેકોરેશન વિભાગ',
   'સર્વસ્વ સેવા',
-  'A / V વિભાગ',
+  'A/V વિભાગ',
   'સાઉન્ડ સિસ્ટમ & LED સ્ક્રીન',
   'પૂજા પ્રસાદી વિભાગ',
   'VIP ભોજનશાળા',
@@ -30,6 +30,11 @@ export const SEVA_VIBHAG_LIST = [
 ] as const;
 
 export type SevaVibhagName = (typeof SEVA_VIBHAG_LIST)[number];
+
+export const normalizeSevaVibhagName = (name: string | null | undefined): string => {
+  if (!name) return 'સ્વયંસેવક દળ';
+  return name.replace(/\bA\s*\/\s*V\b/g, 'A/V').replace(/A\s*\/\s*V/g, 'A/V');
+};
 
 export const DEFAULT_MOCK_SEVA_VIBHAGS = SEVA_VIBHAG_LIST.map((name, index) => ({
   id: String(index + 1),

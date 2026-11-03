@@ -162,10 +162,10 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       const nameBox = clonedElement.querySelector<HTMLElement>('[data-card-name-box="true"]');
       if (nameBox) {
         nameBox.style.transform = 'none';
-        nameBox.style.top = '68.85%';
-        nameBox.style.left = '4.0%';
-        nameBox.style.width = '92.0%';
-        nameBox.style.height = '7.1%';
+        nameBox.style.top = '66.41%';
+        nameBox.style.left = '4.38%';
+        nameBox.style.width = '91.24%';
+        nameBox.style.height = '9.57%';
         nameBox.style.display = 'flex';
         nameBox.style.alignItems = 'center';
         nameBox.style.justifyContent = 'center';

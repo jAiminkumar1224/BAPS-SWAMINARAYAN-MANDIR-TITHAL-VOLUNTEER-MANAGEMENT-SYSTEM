@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, getStoragePublicUrl } from '../lib/supabase';
 import { VerificationData } from '../types';
+import { normalizeSevaVibhagName } from '../constants/sevaVibhag';
 import {
   ShieldCheck,
   CheckCircle,
@@ -49,7 +50,7 @@ export const VerifyVolunteer: React.FC = () => {
             name: found.name,
             village_name: found.village_name,
             xetra_name: found.xetra_name,
-            seva_vibhag_name: found.seva_vibhag?.name || 'સ્વયંસેવક દળ',
+            seva_vibhag_name: normalizeSevaVibhagName(found.seva_vibhag?.name),
             photo_path: found.photo_path,
             created_at: found.created_at,
             is_valid: true,
@@ -72,7 +73,8 @@ export const VerifyVolunteer: React.FC = () => {
       });
 
       if (!error && rpcData && rpcData.length > 0) {
-        setData(rpcData[0] as VerificationData);
+        const item = rpcData[0] as VerificationData;
+        setData({ ...item, seva_vibhag_name: normalizeSevaVibhagName(item.seva_vibhag_name) });
       } else {
         // Fallback: try legacy verify_volunteer
         const { data: legacyData, error: legacyErr } = await supabase.rpc('verify_volunteer', {
@@ -80,7 +82,8 @@ export const VerifyVolunteer: React.FC = () => {
         });
 
         if (!legacyErr && legacyData && legacyData.length > 0) {
-          setData(legacyData[0] as VerificationData);
+          const item = legacyData[0] as VerificationData;
+          setData({ ...item, seva_vibhag_name: normalizeSevaVibhagName(item.seva_vibhag_name) });
         } else {
           setNotFound(true);
         }

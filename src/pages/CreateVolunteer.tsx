@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { SevaVibhag } from '../types';
 import { KSHETRA_LIST } from '../constants/kshetra';
-import { DEFAULT_MOCK_SEVA_VIBHAGS } from '../constants/sevaVibhag';
+import { DEFAULT_MOCK_SEVA_VIBHAGS, normalizeSevaVibhagName } from '../constants/sevaVibhag';
 import { VOLUNTEER_GROUPS } from '../constants/groups';
 import { IdCard } from '../components/IdCard';
 import { PhotoCropModal } from '../components/PhotoCropModal';
@@ -77,9 +77,13 @@ export const CreateVolunteer: React.FC = () => {
         .order('name');
 
       if (!error && data && data.length > 0) {
-        setDepartments(data);
-        setSevaVibhagId(data[0].id);
-        setSelectedDeptName(data[0].name);
+        const normalized = data.map((d: SevaVibhag) => ({
+          ...d,
+          name: normalizeSevaVibhagName(d.name),
+        }));
+        setDepartments(normalized);
+        setSevaVibhagId(normalized[0].id);
+        setSelectedDeptName(normalized[0].name);
       }
     } catch (err) {
       console.error('Error fetching departments:', err);
@@ -90,7 +94,7 @@ export const CreateVolunteer: React.FC = () => {
     setSevaVibhagId(id);
     const found = departments.find((d) => d.id === id);
     if (found) {
-      setSelectedDeptName(found.name);
+      setSelectedDeptName(normalizeSevaVibhagName(found.name));
     }
   };
 

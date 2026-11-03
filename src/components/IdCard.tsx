@@ -82,19 +82,20 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
         />
 
         {/* 1. DYNAMIC PROFILE PHOTO INSIDE CIRCULAR PLACEHOLDER */}
-        {/* Exact measured center: X: 50.0%, Y: 60.89%, Width: 25.84%, Height: 18.85% */}
+        {/* Exact concentric geometric center: X: 50.0%, Y: 60.16% */}
+        {/* Sized at 26.8% x 18.0% with 3px solid white border to completely mask the pre-printed dark blue circle with zero blue lines */}
         <div
           data-card-photo-box="true"
           className="absolute z-10 flex items-center justify-center pointer-events-none"
           style={{
-            top: '60.89%',
+            top: '60.16%',
             left: '50.0%',
-            width: '25.84%',
-            height: '18.85%',
+            width: '26.8%',
+            height: '18.0%',
             transform: 'translate(-50%, -50%)',
           }}
         >
-          <div className="w-full h-full rounded-full overflow-hidden bg-[#08456D] border-[2px] border-white flex items-center justify-center shadow-md">
+          <div className="w-full h-full rounded-full overflow-hidden bg-[#08456D] border-[3px] border-white flex items-center justify-center shadow-md">
             {photoUrl ? (
               <img
                 src={photoUrl}
@@ -243,7 +244,7 @@ export const IdCard = forwardRef<HTMLDivElement, IdCardProps>(
           data-card-vibhag-box="true"
           className="absolute z-10 flex items-start justify-center text-center pointer-events-none overflow-visible"
           style={{
-            top: '91.5%',
+            top: '89.5%',
             left: '50.0%',
             width: '92.0%',
             transform: 'translateX(-50%)',

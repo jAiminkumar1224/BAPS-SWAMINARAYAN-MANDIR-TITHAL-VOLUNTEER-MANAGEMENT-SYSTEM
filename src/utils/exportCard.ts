@@ -91,14 +91,71 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
 
       // ── PDF/PNG Export Fixes: Align cloned elements exactly to the new PNG layout ──
 
-      // 1. Circular Photo: Center X: 50.0%, Center Y: 60.89%
+      // 1. Circular Photo: Center X: 50.0%, Center Y: 60.16%
+      // Positioned and sized to completely eclipse the pre-printed dark blue background circle with zero blue lines showing
       const photoBox = clonedElement.querySelector<HTMLElement>('[data-card-photo-box="true"]');
       if (photoBox) {
         photoBox.style.transform = 'none';
-        photoBox.style.top = '51.46%';
-        photoBox.style.left = '37.08%';
-        photoBox.style.width = '25.84%';
-        photoBox.style.height = '18.85%';
+        photoBox.style.top = '51.06%';
+        photoBox.style.left = '36.60%';
+        photoBox.style.width = '26.8%';
+        photoBox.style.height = '18.0%';
+
+        const innerCircle = photoBox.firstElementChild as HTMLElement;
+        if (innerCircle) {
+          innerCircle.style.border = '3px solid #ffffff';
+          innerCircle.style.boxShadow = '0 2px 8px rgba(0,0,0,0.25)';
+          innerCircle.style.overflow = 'hidden';
+          innerCircle.style.borderRadius = '50%';
+        }
+
+        // Fix photo squashing / compression in html2canvas:
+        // html2canvas ignores CSS 'object-fit: cover' on <img> tags and squashes non-square photos into the box.
+        // We crop the original image onto an in-memory canvas preserving 100% natural aspect ratio (cover mode)
+        // so html2canvas renders the exact, uncompressed clicked/uploaded photo without distortion.
+        const origImg = element.querySelector<HTMLImageElement>('[data-card-photo-box="true"] img');
+        const clonedImg = photoBox.querySelector<HTMLImageElement>('img');
+
+        if (clonedImg && origImg && origImg.naturalWidth > 0 && origImg.naturalHeight > 0) {
+          const boxW = width * 0.268;
+          const boxH = height * 0.180;
+
+          const canvas = clonedDoc.createElement('canvas');
+          canvas.width = Math.round(boxW * 4); // 4x high resolution for 300+ DPI print
+          canvas.height = Math.round(boxH * 4);
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            const natW = origImg.naturalWidth;
+            const natH = origImg.naturalHeight;
+            const targetRatio = canvas.width / canvas.height;
+            const imgRatio = natW / natH;
+
+            let sWidth = natW;
+            let sHeight = natH;
+            let sx = 0;
+            let sy = 0;
+
+            if (imgRatio > targetRatio) {
+              // Image is wider than container: crop horizontal sides (centered)
+              sWidth = natH * targetRatio;
+              sx = (natW - sWidth) / 2;
+            } else {
+              // Image is taller than container (portrait): crop bottom, keep upper 85% for faces
+              sHeight = natW / targetRatio;
+              sy = Math.max(0, (natH - sHeight) * 0.12);
+              if (sy + sHeight > natH) sy = natH - sHeight;
+            }
+
+            ctx.drawImage(origImg, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+            clonedImg.src = canvas.toDataURL('image/png', 1.0);
+            clonedImg.style.width = '100%';
+            clonedImg.style.height = '100%';
+            clonedImg.style.objectFit = 'fill';
+          }
+        }
       }
 
       // 2. Volunteer Name: Center X: 50.0%, Center Y: 72.41% inside white rectangle
@@ -166,7 +223,7 @@ export const captureVolunteerCard = async (element: HTMLElement): Promise<HTMLCa
       const vibhagBox = clonedElement.querySelector<HTMLElement>('[data-card-vibhag-box="true"]');
       if (vibhagBox) {
         vibhagBox.style.transform = 'none';
-        vibhagBox.style.top = '91.5%';
+        vibhagBox.style.top = '89.5%';
         vibhagBox.style.left = '4.0%';
         vibhagBox.style.width = '92.0%';
         vibhagBox.style.height = 'auto';

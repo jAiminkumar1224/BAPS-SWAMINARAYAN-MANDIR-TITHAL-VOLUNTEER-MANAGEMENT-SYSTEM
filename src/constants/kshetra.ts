@@ -18,6 +18,7 @@ export const KSHETRA_LIST = [
   'તિસ્કરી',
   'વંકાલ',
   'રુમલા',
+  'રાનકુવા',
 ] as const;
 
 export type KshetraName = (typeof KSHETRA_LIST)[number];
